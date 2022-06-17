@@ -5,15 +5,6 @@
     "obsidian_tears_nft": {
       "type": "motoko",
       "main": "src/obsidian_tears_nft/main.mo"
-    },
-    "obsidian_tears_nft_assets": {
-      "type": "assets",
-      "source": [
-        "src/obsidian_tears_nft_assets/assets"
-      ],
-      "dependencies": [
-        "obsidian_tears_nft"
-      ]
     }
   },
   "defaults": {
