@@ -1,34 +1,35 @@
-import Cycles "mo:base/ExperimentalCycles";
-import HashMap "mo:base/HashMap";
-import Nat64 "mo:base/Nat64";
+import Array "mo:base/Array";
+import Blob "mo:base/Blob";
 import Char "mo:base/Char";
-import Nat32 "mo:base/Nat32";
-import Nat8 "mo:base/Nat8";
-import Int8 "mo:base/Int8";
-import Int "mo:base/Int";
-import Nat "mo:base/Nat";
+import Cycles "mo:base/ExperimentalCycles";
 import Float "mo:base/Float";
+import HashMap "mo:base/HashMap";
+import Int "mo:base/Int";
+import Int64 "mo:base/Int64";
+import Int8 "mo:base/Int8";
+import Iter "mo:base/Iter";
+import List "mo:base/List";
+import Nat "mo:base/Nat";
+import Nat32 "mo:base/Nat32";
+import Nat64 "mo:base/Nat64";
+import Nat8 "mo:base/Nat8";
+import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
-import Iter "mo:base/Iter";
-import Blob "mo:base/Blob";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Array "mo:base/Array";
-import Option "mo:base/Option";
+
+import Cap "mo:cap/Cap";
+import Encoding "mo:encoding/Binary";
 
 import AID "../motoko/util/AccountIdentifier";
-import ExtCore "../motoko/ext/Core";
-import ExtCommon "../motoko/ext/Common";
 import ExtAllowance "../motoko/ext/Allowance";
+import ExtCommon "../motoko/ext/Common";
+import ExtCore "../motoko/ext/Core";
 import ExtNonFungible "../motoko/ext/NonFungible";
-//EXTv2 SALE
-import Int64 "mo:base/Int64";
-import List "mo:base/List";
-import Encoding "mo:encoding/Binary";
-//Cap
-import Cap "mo:cap/Cap";
-actor class MoonWalker() = this {
+import SVG "../svg";
+
+actor class ObsidianTears() = this {
   
   // Types
   type Time = Time.Time;
@@ -46,19 +47,7 @@ actor class MoonWalker() = this {
   type TransferResponse = ExtCore.TransferResponse;
   type AllowanceRequest = ExtAllowance.AllowanceRequest;
   type ApproveRequest = ExtAllowance.ApproveRequest;
-  // Metadata is stored as a blob (array of UInt8)
-  // order as follows:
-  // background
-  // class badge
-  // outfit
-  // skin
-  // scar
-  // eyes
-  // hair
-  // hood
-  // magic ring
-  // cape
-  // weapon
+  // Metadata :[UInt8] => [background, class badge, outfit, skin, scar(binary), eyes, hair, hood, magic ring, cape, weapon, og badge(binary)]
   type Metadata = ExtCommon.Metadata;
   type NotifyService = ExtCore.NotifyService;
   type MintingRequest = {
@@ -161,16 +150,10 @@ actor class MoonWalker() = this {
 	private stable var _tokenSettlementState : [(TokenIndex, Settlement)] = [];
 	private stable var _paymentsState : [(Principal, [SubAccount])] = [];
 	private stable var _refundsState : [(Principal, [SubAccount])] = [];
-	private stable var _tokenAssetsState : [(TokenIndex, AssetHandle)] = [];
-	private stable var _assetThumbState : [(AssetHandle, Blob)] = [];
-	private stable var _tokenAssetsReverseState : [(AssetHandle, TokenIndex)] = [];
   
   private var _registry : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_registryState.vals(), 0, ExtCore.TokenIndex.equal, ExtCore.TokenIndex.hash);
   private var _tokenMetadata : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tokenMetadataState.vals(), 0, ExtCore.TokenIndex.equal, ExtCore.TokenIndex.hash);
 	private var _owners : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = HashMap.fromIter(_ownersState.vals(), 0, AID.equal, AID.hash);
-	private var _tokenAssets : HashMap.HashMap<TokenIndex, AssetHandle> = HashMap.fromIter(_tokenAssetsState.vals(), 0, ExtCore.TokenIndex.equal, ExtCore.TokenIndex.hash);
-  private var _assetThumb : HashMap.HashMap<AssetHandle, Blob> = HashMap.fromIter(_assetThumbState.vals(), 0, AID.equal, AID.hash);
-	private var _tokenAssetsReverse : HashMap.HashMap<AssetHandle, TokenIndex> = HashMap.fromIter(_tokenAssetsReverseState.vals(), 0, AID.equal, AID.hash);
   
   //For marketplace
   private var _tokenListing : HashMap.HashMap<TokenIndex, Listing> = HashMap.fromIter(_tokenListingState.vals(), 0, ExtCore.TokenIndex.equal, ExtCore.TokenIndex.hash);
@@ -181,11 +164,11 @@ actor class MoonWalker() = this {
 	private stable var _usedPaymentAddressess : [(AccountIdentifier, Principal, SubAccount)] = [];
 	private stable var _transactions : [Transaction] = [];
   private stable var _supply : Balance  = 0;
-  private stable var _minter : Principal  = Principal.fromText("yzwm5-kcn6u-mdgtp-gkmxt-2jrgd-xxoeh-h43r4-nbkxw-c6r5q-i7g5j-zae");
+  private stable var _minter : Principal  = Principal.fromText("6ulqo-ikasf-xzltp-ylrhu-qt4gt-nv4rz-gd46e-nagoe-3bo7b-kbm3h-bqe");
   private stable var _nextTokenId : TokenIndex  = 0;
 
   //State functions
-  system func preupgrade() {
+  system func preupgrade() { 
     _registryState := Iter.toArray(_registry.entries());
     _tokenMetadataState := Iter.toArray(_tokenMetadata.entries());
     _ownersState := Iter.toArray(_owners.entries());
@@ -193,9 +176,6 @@ actor class MoonWalker() = this {
     _tokenSettlementState := Iter.toArray(_tokenSettlement.entries());
     _paymentsState := Iter.toArray(_payments.entries());
     _refundsState := Iter.toArray(_refunds.entries());
-    _tokenAssetsState := Iter.toArray(_tokenAssets.entries());
-    _assetThumbState := Iter.toArray(_assetThumb.entries());
-    _tokenAssetsReverseState := Iter.toArray(_tokenAssetsReverse.entries());
     _salesSettlementsState := Iter.toArray(_salesSettlements.entries());
     _salesPrincipalsState := Iter.toArray(_salesPrincipals.entries());
     //EXTv2 SALE
@@ -213,9 +193,6 @@ actor class MoonWalker() = this {
     _tokenSettlementState := [];
     _paymentsState := [];
     _refundsState := [];
-    _tokenAssetsState := [];
-    _assetThumbState := [];
-    _tokenAssetsReverseState := [];
     _salesSettlementsState := [];
     _salesPrincipalsState := [];
     //EXTv2 SALE
@@ -259,30 +236,29 @@ actor class MoonWalker() = this {
   //==========================================
   var entrepotRoyaltyAddress : AccountIdentifier = "c7e461041c0c5800a56b64bb7cefc247abc0bbbb99bd46ff71c64e92d9f5c2f9";
   var entrepotSaleAddress : AccountIdentifier = "b18587720a742b1975c700a3ca11014510baecc3b98b270b24aaa2971d5c35fa";
-  var teamRoyaltyAddress : AccountIdentifier = "f3b6a4939c05c6c57bea6dfcb43be69d5720f4b1efa84c0a6be7ba31f6160dcf";
-  var teamSaleAddress : AccountIdentifier = teamRoyaltyAddress;
-  var teamNftAddress : AccountIdentifier = teamRoyaltyAddress;
+  var teamRoyaltyAddress : AccountIdentifier = "23e8102e0cd11dda3cad28f0fec06219ffda12946b56ed11cd65b33fedf441ad";
+  var teamSaleAddress : AccountIdentifier = "29fb4c2e65cc0490987ca3c313e2d334d4ffad1acf5145821d819f97d1a9b6ce";
+  var teamNftAddress : AccountIdentifier = "cad241cce4e5ab6a5d769c18a56cf2e162f15cab42005fc57979eeca59dbfa2a";
   var salesFees : [(AccountIdentifier, Nat64)] = [
     (teamRoyaltyAddress, 5000), //Royalty Fee
     (entrepotRoyaltyAddress, 1000), //Entrepot Fee 1%
   ];
   
-  var airdrop : [AccountIdentifier] = []; //AIrdrops
+  var airdrop : [AccountIdentifier] = []; //Airdrops
   var reservedAmount : Nat64 = 23; //Reserved
   var saleCommission : Nat64 = 6000; //Sale price
-  var salePrice : Nat64 = 2500000000; //Sale price
-  var whitelistPrice : Nat64 = 2000000000; //Discount price
-  var publicSaleStart : Time = 1655780400000000000; //Start of first purchase (WL or other)
-  var whitelistTime : Time = 1655866800000000000; //Period for WL only discount. Set to publicSaleStart for no exclusive period
+  var salePrice : Nat64 = 3000000000; //Sale price
+  var whitelistPrice : Nat64 = salePrice; //Discount price
+  var publicSaleStart : Time = 1655996400000000000; //Start of first purchase (WL or other)
+  var whitelistTime : Time = 1655910000000000000; //Period for WL only discount. Set to publicSaleStart for no exclusive period
   var marketDelay : Time = 6 * 24 * 60 * 60 * 1_000_000_000; //How long to delay market opening
   var whitelistOneTimeOnly : Bool = false; //Whitelist addresses are removed after purchase
   var whitelistDiscountLimited : Bool = false; //If the whitelist discount is limited to the whitelist period only. If no whitelist period this is ignored
   var nftCollectionName : Text = "Obsidian Tears";
-  // TODO figure out the final image size
-  var imageWidth : Text = "1024"; //size of full size
+  // TODO need 300x300 for Entrepot
+  var imageWidth : Text = "300"; //size of full size
   var imageHeight : Text = imageWidth; //size of full size
-  var imageType : Text = "image/png"; //type of thumbnails
-  var imageOffset : Nat32 = 1; //offset of image assets
+  var imageType : Text = "image/svg+xml"; //type of thumbnails
   var whitelistLimit : Nat = 1; //initial whitelist
   var initialWhitelist : [AccountIdentifier] = []; //initial whitelist
   
@@ -293,15 +269,15 @@ actor class MoonWalker() = this {
     };
     return [(1, salePrice)]
   };
-  //Init code
-  func initiateSale() : () {
-    // TODO: mint nfts ahead of launch instead of here
-    _mintNftsIndexed();
+  //Init code. Mint before calling.
+  public shared(msg) func initiateSale() : () {
+    assert(msg.caller == _minter);
+    assert(_hasBeenInitiated == false);
     _whitelist := [];
     if (initialWhitelist.size() > 0){
       var _i : Nat = 0;
       while(_i < whitelistLimit){
-        _whitelist := Array.append(_whitelist, initialWhitelist);
+        _whitelist := _appendAll(_whitelist, initialWhitelist);
         _i += 1;
       };
     };
@@ -352,7 +328,7 @@ actor class MoonWalker() = this {
       while(ret.size() < Nat64.toNat(qty)) {        
         var token : TokenIndex = _tokensForSale[0];
         _tokensForSale := Array.filter(_tokensForSale, func(x : TokenIndex) : Bool { x != token } );
-        ret := Array.append(ret, [token]);
+        ret := _append(ret, token);
       };
       ret;
     } else {
@@ -381,7 +357,7 @@ actor class MoonWalker() = this {
     });
   };
   func addToWhitelist(address : AccountIdentifier) : () {
-    _whitelist := Array.append(_whitelist, [address]);
+    _whitelist := _append(_whitelist, address);
   };
   public query(msg) func saleTransactions() : async [SaleTransaction] {
     _saleTransactions;
@@ -418,7 +394,7 @@ actor class MoonWalker() = this {
     //Custom: not pre-mint
     var ret : [TokenIndex] = [];
     while(ret.size() < Nat64.toNat(qty)) {        
-      ret := Array.append(ret, [0:TokenIndex]);
+      ret := _appendAll(ret, [0:TokenIndex]);
     };
     ret;
   };
@@ -491,13 +467,13 @@ actor class MoonWalker() = this {
                 for (a in tokens.vals()){
                   _transferTokenToUser(a, settlement.buyer);
                 };
-                _saleTransactions := Array.append(_saleTransactions, [{
+                _saleTransactions := _append(_saleTransactions, {
                   tokens = tokens;
                   seller = Principal.fromActor(this);
                   price = settlement.price;
                   buyer = settlement.buyer;
                   time = Time.now();
-                }]);
+                });
                 _soldIcp += settlement.price;
                 _sold += tokens.size();
                 _salesSettlements.delete(paymentaddress);
@@ -511,7 +487,7 @@ actor class MoonWalker() = this {
               }
             } else {
               if (settlement.expires < Time.now()) {
-                _failedSales := Array.append(_failedSales, [(settlement.buyer, settlement.subaccount)]);
+                _failedSales := _append(_failedSales, (settlement.buyer, settlement.subaccount));
                 _salesSettlements.delete(paymentaddress);
                 if (whitelistOneTimeOnly == true){
                   if (settlement.price == whitelistPrice) {
@@ -697,13 +673,13 @@ actor class MoonWalker() = this {
                   _addDisbursement((token, token_owner, settlement.subaccount, rem));
                   _capAddSale(token, token_owner, settlement.buyer, settlement.price);
                   _transferTokenToUser(token, settlement.buyer);
-                  _transactions := Array.append(_transactions, [{
+                  _transactions := _append(_transactions, {
                     token = tokenid;
                     seller = settlement.seller;
                     price = settlement.price;
                     buyer = settlement.buyer;
                     time = Time.now();
-                  }]);
+                  });
                   _tokenListing.delete(token);
                   _tokenSettlement.delete(token);
                   return #ok();
@@ -889,7 +865,7 @@ actor class MoonWalker() = this {
           ];
           caller = Principal.fromActor(this);
         };
-        events := Array.append(events, [event]);
+        events := _append(events, event);
       };
       try {
         ignore(await CapService.migrate(events));
@@ -1034,7 +1010,7 @@ actor class MoonWalker() = this {
   public query func getTokens() : async [(TokenIndex, Metadata)] {
     var resp : [(TokenIndex, Metadata)] = [];
     for(e in _tokenMetadata.entries()){
-      resp := Array.append(resp, [(e.0, #nonfungible({ metadata = null }))]);
+      resp := _append(resp, (e.0, #nonfungible({ metadata = null })));
     };
     resp;
   };
@@ -1049,7 +1025,7 @@ actor class MoonWalker() = this {
       case(?tokens) {
         var resp : [(TokenIndex, ?Listing, ?Blob)] = [];
         for (a in tokens.vals()){
-          resp := Array.append(resp, [(a, _tokenListing.get(a), null)]);
+          resp := _append(resp, (a, _tokenListing.get(a), null));
         };
         return #ok(resp);
       };
@@ -1096,7 +1072,7 @@ actor class MoonWalker() = this {
       if(_isLocked(token)){
         switch(_tokenSettlement.get(token)) {
           case(?settlement) {
-            result := Array.append(result, [(token, AID.fromPrincipal(settlement.seller, ?settlement.subaccount), settlement.price)]);
+            result := _append(result, (token, AID.fromPrincipal(settlement.seller, ?settlement.subaccount), settlement.price));
           };
           case(_) {};
         };
@@ -1110,7 +1086,7 @@ actor class MoonWalker() = this {
   public query func listings() : async [(TokenIndex, Listing, Metadata)] {
     var results : [(TokenIndex, Listing, Metadata)] = [];
     for(a in _tokenListing.entries()) {
-      results := Array.append(results, [(a.0, a.1, #nonfungible({ metadata = null }))]);
+      results := _append(results, (a.0, a.1, #nonfungible({ metadata = null })));
     };
     results;
   };
@@ -1136,7 +1112,7 @@ actor class MoonWalker() = this {
           if (Option.isNull(Array.find(removedPayments, func(a : SubAccount) : Bool {
             Array.equal(a, p, Nat8.equal);
           }))) {
-            newPayments := Array.append(newPayments, [p]);
+            newPayments := _append(newPayments, p);
           };
         };
         _payments.put(seller, newPayments)
@@ -1204,40 +1180,37 @@ actor class MoonWalker() = this {
       case (?tokenid) {
         switch(_getTokenIndex(tokenid)) {
           case (?index) {
-            switch(_getParam(request.url, "type")) {
-              case(?t) {
-                if (t == "thumbnail") {
-                  return {
-                    status_code = 200;
-                    headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                    // TODO generate body instead of getting it from asset list
-                    body = Option.unwrap(_assetThumb.get(_tokenIndexToAssetHandle(index)));
-                    streaming_strategy = null;
+            switch(_tokenMetadata.get(index)) {
+              case (?#nonfungible r) {
+                switch (r.metadata) {
+                  case(?data) {
+                    switch(_getParam(request.url, "type")) {
+                      case(?t) {
+                        if (t == "thumbnail") {
+                          // get thumbnail of token associated with tokenId
+                          return {
+                            status_code = 200;
+                            headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
+                            body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                            streaming_strategy = null;
+                          };
+                        };
+                      };
+                      case(_) {
+                      };
+                    };
+                    // get standard image
+                    return {
+                      status_code = 200;
+                      headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
+                      body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                      streaming_strategy = null;
+                    };
                   };
+                  case(_){};
                 };
               };
-              case(_) {
-              };
-            };
-            // TODO not sure what this is for
-            switch(_assets.get(_tokenIndexToAssetHandle(index))) {
-              case(?asset)  {
-                return {
-                  status_code = 200;
-                  headers = [("content-type", "image/svg+xml")];
-                  body = Text.encodeUtf8 ("<svg width=\""#width#"\" height=\""#height#"\" xmlns=\"http://www.w3.org/2000/svg\"><image href=\"https://"#asset.canister#".raw.ic0.app/?index="#Nat32.toText(asset.id)#"\" width=\""#width#"\" height=\""#height#"\"/></svg>");
-                  streaming_strategy = null;
-                };
-              };
-              case (_){
-                return {
-                  status_code = 200;
-                  headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                  // TODO same as first http request
-                  body = Option.unwrap(_assetThumb.get(_tokenIndexToAssetHandle(index)));
-                  streaming_strategy = null;
-                };
-              };
+              case(_) {};
             };
           };
           case (_){};
@@ -1247,80 +1220,35 @@ actor class MoonWalker() = this {
     };
     switch(_getParam(request.url, "index")) {
       case (?index) {
-        switch(_getParam(request.url, "type")) {
-          case(?t) {
-            if (t == "thumbnail") {
-              return {
-                status_code = 200;
-                headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                // TODO same as first http request
-                body = Option.unwrap(_assetThumb.get(_tokenIndexToAssetHandle(_textToNat32(index))));
-                streaming_strategy = null;
+        switch(_tokenMetadata.get(textToNat32(index))) {
+          case (?#nonfungible r) {
+            switch(r.metadata) {
+              case(?data) {
+                switch(_getParam(request.url, "type")) {
+                  case(?t) {
+                    if (t == "thumbnail") {
+                      return {
+                        status_code = 200;
+                        headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
+                        body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                        streaming_strategy = null;
+                      };
+                    };
+                  };
+                  case(_) {
+                  };
+                };
+                return {
+                  status_code = 200;
+                  headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
+                  body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                  streaming_strategy = null;
+                };
               };
+              case(_) {};
             };
           };
-          case(_) {
-          };
-        };
-        // TODO not sure what this is for
-        switch(_assets.get(_tokenIndexToAssetHandle(_textToNat32(index)))) {
-          case(?asset)  {
-            return {
-              status_code = 200;
-              headers = [("content-type", "image/svg+xml")];
-              body = Text.encodeUtf8 ("<svg width=\""#width#"\" height=\""#height#"\" xmlns=\"http://www.w3.org/2000/svg\"><image href=\"https://"#asset.canister#".raw.ic0.app/?index="#Nat32.toText(asset.id)#"\" width=\""#width#"\" height=\""#height#"\"/></svg>");
-              streaming_strategy = null;
-            };
-          };
-          case (_){
-            return {
-              status_code = 200;
-              headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-              // TODO same as first http request
-              body = Option.unwrap(_assetThumb.get(_tokenIndexToAssetHandle(_textToNat32(index))));
-              streaming_strategy = null;
-            };
-          };
-        };
-      };
-      case (_){};
-    };
-    switch(_getParam(request.url, "asset")) {
-      case (?ah) {
-        switch(_getParam(request.url, "type")) {
-          case(?t) {
-            if (t == "thumbnail") {
-              return {
-                status_code = 200;
-                headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                // TODO change this somehow
-                body = Option.unwrap(_assetThumb.get(ah));
-                streaming_strategy = null;
-              };
-            };
-          };
-          case(_) {
-          };
-        };
-        // TODO change this somehow
-        switch(_assets.get(ah)) {
-          case(?asset)  {
-            return {
-              status_code = 200;
-              headers = [("content-type", "image/svg+xml")];
-              body = Text.encodeUtf8 ("<svg width=\""#width#"\" height=\""#height#"\" xmlns=\"http://www.w3.org/2000/svg\"><image href=\"https://"#asset.canister#".raw.ic0.app/?index="#Nat32.toText(asset.id)#"\" width=\""#width#"\" height=\""#height#"\"/></svg>");
-              streaming_strategy = null;
-            };
-          };
-          case (_){
-            return {
-              status_code = 200;
-              headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-              // TODO change this somehow
-              body = Option.unwrap(_assetThumb.get(ah));
-              streaming_strategy = null;
-            };
-          };
+          case(_) {};
         };
       };
       case (_){};
@@ -1375,7 +1303,6 @@ actor class MoonWalker() = this {
     };
     let tokenind = ExtCore.TokenIdentifier.getIndex(token);
     return ?tokenind;
-    //_tokenAssets.get(tokenind);
   };
   private func _getParam(url : Text, param : Text) : ?Text {
     var _s : Text = url;
@@ -1415,7 +1342,7 @@ actor class MoonWalker() = this {
     var reversed : [Nat32] = [];
     for(c in t.chars()) {
       assert(Char.isDigit(c));
-      reversed := Array.append([Char.toNat32(c)-48], reversed);
+      reversed := _appendAll([Char.toNat32(c)-48], reversed);
     };
     var total : Nat32 = 0;
     var place : Nat32  = 1;
@@ -1450,7 +1377,7 @@ actor class MoonWalker() = this {
   };
   func _addToUserTokens(tindex : TokenIndex, receiver : AccountIdentifier) : () {
     let ownersTokensNew : [TokenIndex] = switch(_owners.get(receiver)) {
-      case(?ownersTokens) Array.append(ownersTokens, [tindex]);
+      case(?ownersTokens) _append(ownersTokens, tindex);
       case(_) [tindex];
     };
     _owners.put(receiver, ownersTokensNew);
@@ -1519,6 +1446,31 @@ actor class MoonWalker() = this {
     _nextTokenId := 0;
   };
 
+  func _append<T>(array : [T], val: T) : [T] {
+      let new = Array.tabulate<T>(array.size()+1, func(i) {
+          if (i < array.size()) {
+              array[i];
+          } else {
+              val;
+          };
+      });
+      new;
+  };
+
+  func _appendAll<T>(array : [T], val: [T]) : [T] {
+    if (val.size() == 0) {
+      return array;
+    };
+    let new = Array.tabulate<T>(array.size() + val.size(), func(i) {
+        if (i < array.size()) {
+            array[i];
+        } else {
+            val[i - array.size()];
+        };
+    });
+    new;
+  };
+
   // use this function to mint nfts
   public shared(msg) func _mintNftsFromArray(tomint : [[Nat8]]){
     assert(msg.caller == _minter);
@@ -1529,15 +1481,16 @@ actor class MoonWalker() = this {
       _nextTokenId := _nextTokenId + 1;
     };
   };
-  func _mintNftsIndexed(n : Nat32){
-    while(_nextTokenId < n){
-      _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = null }));
-      _transferTokenToUser(_nextTokenId, "0000");
-      _supply := _supply + 1;
-      _nextTokenId := _nextTokenId + 1;
+
+  func textToNat32( txt : Text) : Nat32 {
+    assert(txt.size() > 0);
+    let chars = txt.chars();
+    var num : Nat32 = 0;
+    for (v in chars){
+        let charToNum = Char.toNat32(v)-48;
+        assert(charToNum >= 0 and charToNum <= 9);
+        num := num * 10 +  charToNum;          
     };
-  };
-  if (_hasBeenInitiated == false) {
-    initiateSale();
+    num;
   };
 }
