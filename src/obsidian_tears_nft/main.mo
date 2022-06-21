@@ -252,10 +252,9 @@ actor class ObsidianTears() = this {
   var publicSaleStart : Time = 1655996400000000000; //Start of first purchase (WL or other)
   var whitelistTime : Time = 1655910000000000000; //Period for WL only discount. Set to publicSaleStart for no exclusive period
   var marketDelay : Time = 6 * 24 * 60 * 60 * 1_000_000_000; //How long to delay market opening
-  var whitelistOneTimeOnly : Bool = false; //Whitelist addresses are removed after purchase
+  var whitelistOneTimeOnly : Bool = true; //Whitelist addresses are removed after purchase
   var whitelistDiscountLimited : Bool = false; //If the whitelist discount is limited to the whitelist period only. If no whitelist period this is ignored
   var nftCollectionName : Text = "Obsidian Tears";
-  // TODO need 300x300 for Entrepot
   var imageWidth : Text = "300"; //size of full size
   var imageHeight : Text = imageWidth; //size of full size
   var imageType : Text = "image/svg+xml"; //type of thumbnails
