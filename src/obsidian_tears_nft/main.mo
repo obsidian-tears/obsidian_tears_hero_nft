@@ -252,7 +252,7 @@ actor class ObsidianTears() = this {
   var publicSaleStart : Time = 1655996400000000000; //Start of first purchase (WL or other)
   var whitelistTime : Time = 1655910000000000000; //Period for WL only discount. Set to publicSaleStart for no exclusive period
   var marketDelay : Time = 6 * 24 * 60 * 60 * 1_000_000_000; //How long to delay market opening
-  var whitelistOneTimeOnly : Bool = true; //Whitelist addresses are removed after purchase
+  var whitelistOneTimeOnly : Bool = false; //Whitelist addresses are removed after purchase
   var whitelistDiscountLimited : Bool = false; //If the whitelist discount is limited to the whitelist period only. If no whitelist period this is ignored
   var nftCollectionName : Text = "Obsidian Tears";
   var imageWidth : Text = "300"; //size of full size
@@ -882,11 +882,11 @@ actor class ObsidianTears() = this {
     _runHeartbeat := true;
   };
   public shared(msg) func adminKillHeartbeatExtra(p : Text) : async () {
-    assert(p == "SWZRN?m6cG]loF461eC7");
+    assert(p == "thisisthepassword");
     _runHeartbeat := false;
   };
   public shared(msg) func adminStartHeartbeatExtra(p : Text) : async () {
-    assert(p == "SWZRN?m6cG]loF461eC7");
+    assert(p == "thisisthepassword");
     _runHeartbeat := true;
   };
 
