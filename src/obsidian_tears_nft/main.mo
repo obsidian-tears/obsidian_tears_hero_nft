@@ -1622,7 +1622,7 @@ actor class ObsidianTears() = this {
   };
 
   // use this function to mint nfts
-  public shared(msg) func mintNftsFromArray(tomint : [[Nat8]]){
+  public shared(msg) func _mintNftsFromArray(tomint : [[Nat8]]){
     assert(msg.caller == _minter);
     for(a in tomint.vals()){
       _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(a) }));
