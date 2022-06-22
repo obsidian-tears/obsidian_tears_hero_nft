@@ -33,20 +33,20 @@ module {
     // weapon
     // og badge
     svg #= "<g id=\"backgrounds\"><image href=\""#Backgrounds.elements[Nat8.toNat(seed[0])]#"\" /></g>";
-    svg #= "<g id=\"dogs\"><image href=\""#Classes.elements[Nat8.toNat(seed[1])]#"\" /></g>";
-    svg #= "<g id=\"noses\"><image href=\""#Outfits.elements[Nat8.toNat(seed[2])]#"\" /></g>";
-    svg #= "<g id=\"tears\"><image href=\""#Skins.elements[Nat8.toNat(seed[3])]#"\" /></g>";
+    svg #= "<g id=\"class_badge\"><image href=\""#Classes.elements[Nat8.toNat(seed[1])]#"\" /></g>";
+    svg #= "<g id=\"outfit\"><image href=\""#Outfits.elements[Nat8.toNat(seed[2])]#"\" /></g>";
+    svg #= "<g id=\"skin\"><image href=\""#Skins.elements[Nat8.toNat(seed[3])]#"\" /></g>";
     if (seed[4] == 1) {
-      svg #= "<g id=\"moles\"><image href=\""#Scar.elements[0]#"\" /></g>";
+      svg #= "<g id=\"scar\"><image href=\""#Scar.elements[0]#"\" /></g>";
     };
-    svg #= "<g id=\"lips\"><image href=\""#Eyes.elements[Nat8.toNat(seed[5])]#"\" /></g>";
-    svg #= "<g id=\"eyes\"><image href=\""#Hair.elements[Nat8.toNat(seed[6])]#"\" /></g>";
-    svg #= "<g id=\"necks\"><image href=\""#Hoods.elements[Nat8.toNat(seed[7])]#"\" /></g>";
-    svg #= "<g id=\"heads\"><image href=\""#MagicRings.elements[Nat8.toNat(seed[8])]#"\" /></g>";
-    svg #= "<g id=\"mouths\"><image href=\""#Capes.elements[Nat8.toNat(seed[9])]#"\" /></g>";
-    svg #= "<g id=\"accessories\"><image href=\""#Weapons.elements[Nat8.toNat(seed[10])]#"\" /></g>";
+    svg #= "<g id=\"eyes\"><image href=\""#Eyes.elements[Nat8.toNat(seed[5])]#"\" /></g>";
+    svg #= "<g id=\"hair\"><image href=\""#Hair.elements[Nat8.toNat(seed[6])]#"\" /></g>";
+    svg #= "<g id=\"hood\"><image href=\""#Hoods.elements[Nat8.toNat(seed[7])]#"\" /></g>";
+    svg #= "<g id=\"magic_ring\"><image href=\""#MagicRings.elements[Nat8.toNat(seed[8])]#"\" /></g>";
+    svg #= "<g id=\"cape\"><image href=\""#Capes.elements[Nat8.toNat(seed[9])]#"\" /></g>";
+    svg #= "<g id=\"weapon\"><image href=\""#Weapons.elements[Nat8.toNat(seed[10])]#"\" /></g>";
     if (seed[11] == 1) {
-      svg #= "<g id=\"accessories\"><image href=\""#OgBadge.elements[0]#"\" /></g>";
+      svg #= "<g id=\"og_badge\"><image href=\""#OgBadge.elements[0]#"\" /></g>";
     };
     svg #= "</svg>";
     return svg;
