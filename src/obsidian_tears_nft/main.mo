@@ -249,8 +249,8 @@ actor class ObsidianTears() = this {
   var saleCommission : Nat64 = 6000; //Sale price
   var salePrice : Nat64 = 3000000000; //Sale price
   var whitelistPrice : Nat64 = salePrice; //Discount price
-  var publicSaleStart : Time = 1655996400000000000; //Start of first purchase (WL or other)
-  var whitelistTime : Time = 1655910000000000000; //Period for WL only discount. Set to publicSaleStart for no exclusive period
+  var publicSaleStart : Time = 1655996400000000000; //Jun 23, 2022 3pm GMT Start of first purchase (WL or other)
+  var whitelistTime : Time = 1656000000000000000; //Jun 24, 2022 3pm GMT Period for WL only discount. Set to publicSaleStart for no exclusive period
   var marketDelay : Time = 6 * 24 * 60 * 60 * 1_000_000_000; //How long to delay market opening
   var whitelistOneTimeOnly : Bool = false; //Whitelist addresses are removed after purchase
   var whitelistDiscountLimited : Bool = false; //If the whitelist discount is limited to the whitelist period only. If no whitelist period this is ignored
@@ -1622,7 +1622,7 @@ actor class ObsidianTears() = this {
   };
 
   // use this function to mint nfts
-  public shared(msg) func _mintNftsFromArray(tomint : [[Nat8]]){
+  public shared(msg) func mintNftsFromArray(tomint : [[Nat8]]){
     assert(msg.caller == _minter);
     for(a in tomint.vals()){
       _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(a) }));
@@ -1648,5 +1648,11 @@ actor class ObsidianTears() = this {
   public shared(msg) func updateMetadata(index : Nat32, data : [Nat8]) : () {
     assert(msg.caller == _minter);
     _tokenMetadata.put(index, #nonfungible({ metadata = ?Blob.fromArray(data) }));
+  };
+
+  // add wallets to the whitelist
+  public shared(msg) func addWhitelistWallets(walletAddresses : [AccountIdentifier]) : () {
+    assert(msg.caller == _minter);
+    _whitelist := _appendAll(_whitelist, walletAddresses);
   };
 }
