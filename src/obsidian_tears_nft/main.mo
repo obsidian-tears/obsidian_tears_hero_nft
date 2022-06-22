@@ -1341,7 +1341,7 @@ actor class ObsidianTears() = this {
                           return {
                             status_code = 200;
                             headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                            body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                            body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
                             streaming_strategy = null;
                           };
                         };
@@ -1353,7 +1353,7 @@ actor class ObsidianTears() = this {
                     return {
                       status_code = 200;
                       headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                      body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                      body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
                       streaming_strategy = null;
                     };
                   };
@@ -1380,7 +1380,7 @@ actor class ObsidianTears() = this {
                       return {
                         status_code = 200;
                         headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                        body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                        body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
                         streaming_strategy = null;
                       };
                     };
@@ -1391,7 +1391,7 @@ actor class ObsidianTears() = this {
                 return {
                   status_code = 200;
                   headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                  body = Text.encodeUtf8(SVG.make(Blob.toArray(data)));
+                  body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
                   streaming_strategy = null;
                 };
               };
@@ -1642,5 +1642,11 @@ actor class ObsidianTears() = this {
         num := num * 10 +  charToNum;          
     };
     num;
+  };
+
+  // update metadata for tokens
+  public shared(msg) func updateMetadata(index : Nat32, data : [Nat8]) : () {
+    assert(msg.caller == _minter);
+    _tokenMetadata.put(index, #nonfungible({ metadata = ?Blob.fromArray(data) }));
   };
 }
