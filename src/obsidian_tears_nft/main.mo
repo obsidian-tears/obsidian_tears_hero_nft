@@ -137,7 +137,11 @@ actor class ObsidianTears() = this {
     name : Text;
     canister : Text;
   };
-  
+  //OBSIDIAN TEARS
+  let _gameActor = actor("gagfs-yqaaa-aaaao-aaiva-cai") : actor { getEquippedItems : ({characterIndex : TokenIndex}) -> async [TokenIndex]}; 
+  let _itemActor = actor("goei2-daaaa-aaaao-aaiua-cai") : actor { transferTokensToUser : (tindices : [TokenIndex], receiver : AccountIdentifier) -> async ()}; 
+  let _blackhole = "the_blackhole";
+
   private let EXTENSIONS : [Extension] = ["@ext/common", "@ext/nonfungible"];
   
   //State work
@@ -244,13 +248,29 @@ actor class ObsidianTears() = this {
     (entrepotRoyaltyAddress, 1000), //Entrepot Fee 1%
   ];
   
-  var airdrop : [AccountIdentifier] = []; //Airdrops
-  var reservedAmount : Nat64 = 23; //Reserved
+  var airdrop : [AccountIdentifier] = [
+"d8c17d3507ac742150592a6d249f4bc052bae15e9ba6d4d986c8fb1e8aa7b582",
+"a0eaa3df1b847329e1128053feba6423416824aeb266e66192270e1353644f4a",
+"43177eadc1985a577ae5fd7a93cee273364a83194df18a51961dbe262c1e159e",
+"440a12ac1097b51551c90a752af9fc00b39c1dc1d753f0a3c1974ee0789eb5c0",
+"97abd404adf0e3a731fe20da2c66f24cd45cf5b9d673207b1cc9ee774e8d7137",
+"fdab27844b32357777a88c87e6bbc0ef8bca9e5ba4b400decb9c889f267de28d",
+"85a3319f6c185efb8fd30d4b0178730fc1ea11713268bc262ac85b717f9b909d",
+"4e5df75d0038846b26971f4eeb0c1ea5a549f52ed3b8e56c4ca29be29be33a3a",
+"517623dd0ce643d7f3e253d15ff8f618d91843bd1fab89c7fda8def2e9a97684",
+"eedf2f47155a9803f539d40579b863c95b4b51c755d6bac54269fad27ec4801c",
+"3fe39de7bee74f71a218ce30463bb5c3ce469f6e0ba006d278adda0183037fa6",
+"de712aab2b85e1bb07cf92ff656204a44e6d96f85edf6f9953de05242ad1f667",
+"0d05c571c49aa4e9a43af14dded30170f5cbe1c8a82d77191e4dff6ede60cab0",
+"89211bf7a4a2a10a44a58c4252f72267d8ca8a09a3da043510e69d428f5b8183",
+"a50f2c70a60222c3e1f666cfb033f05f66805ebda4b15a2935cac64e13597910",
+"12bc158b6aad670322f4bfc177b6fc61bbb51d02816fcc26fb187ed9301df7ce"]; //Airdrops
+  var reservedAmount : Nat64 = 0; //Reserved
   var saleCommission : Nat64 = 6000; //Sale price
-  var salePrice : Nat64 = 3000000000; //Sale price
+  var salePrice : Nat64 = 500000000; //Sale price
   var whitelistPrice : Nat64 = salePrice; //Discount price
-  var publicSaleStart : Time = 1655996400000000000; //Jun 23, 2022 3pm GMT Start of first purchase (WL or other)
-  var whitelistTime : Time = 1656082800000000000; //Jun 24, 2022 3pm GMT Period for WL only discount. Set to publicSaleStart for no exclusive period
+  var publicSaleStart : Time = 1656655140000000000; //Jun 23, 2022 3pm GMT Start of first purchase (WL or other)
+  var whitelistTime : Time = 1656655140000000000; //Jun 24, 2022 3pm GMT Period for WL only discount. Set to publicSaleStart for no exclusive period
   var marketDelay : Time = 6 * 24 * 60 * 60 * 1_000_000_000; //How long to delay market opening
   var whitelistOneTimeOnly : Bool = false; //Whitelist addresses are removed after purchase
   var whitelistDiscountLimited : Bool = false; //If the whitelist discount is limited to the whitelist period only. If no whitelist period this is ignored
@@ -259,158 +279,7 @@ actor class ObsidianTears() = this {
   var imageHeight : Text = imageWidth; //size of full size
   var imageType : Text = "image/svg+xml"; //type of thumbnails
   var whitelistLimit : Nat = 1; //initial whitelist
-  var initialWhitelist : [AccountIdentifier] = [
-    "d651af51f5c7a7dfca439c5376b8f20865d0c4e40f4aaffac1852af2fe9826fc",
-"5d80c0a53cdcb06be2d58084f561af50117e7e7041561f8c02a0159f8eb00b43",
-"4bd3769e57581e3c1ae6a04055755750a936bf14f5f40446a71cd770712d5302",
-"90df9cf1697818b7d08c5e68741065cd977b8ab691ebf4d3efd1ed24ca79265c",
-"b97a3ffff2662f52aafff4908805941b265afd8b9cfb1fdecee8101483269e32",
-"3be10d806b611edf4614de3f397f4e2b3b5484af769008bfce14dff96ad72fdb",
-"a0eaa3df1b847329e1128053feba6423416824aeb266e66192270e1353644f4a",
-"5be0490fb2a3dd5e9b5b0c5841231dc47214234a43587a7d1229b4cb2245bbb3",
-"a39f8f79b11d01b4c8852542ed8b37fe6ad8588f4ba0b0d852084f7d769af37a",
-"d27e376c000e7e6c3b5e960d7aeb8eba4e0c4db80942d87accb1ec1aea29cc18",
-"c73c0c281441b7a826e5369c97b4471b8a97611d49d717fee4f1617e9db1676d",
-"a86e0c9f41de2a438cf76fe73466f0f12729d60e410540957adc09a7e071b8f7",
-"d6a8f78c22ee42c733ad9fdad9fecfd7b4ceda3932863d6aafb9aee7860fb429",
-"ab647219f14c7892b50ac99ec2b111ad872189c331181b5f36479f8d56aab845",
-"3fcbb7836d1e7de3dd75a31abf23aa1ce4952750540274fc8cdca6575205a2d9",
-"4a9f5a4edc2cc10d2680e70e9d9c574bbc35a2c70fb7c1a2f7f0b2aab2dadf47",
-"f10ae2cba16832694b82e3de906cc5f6e3851e4c09e8e135f62f216c71bfe553",
-"e4ec4c3bcb33b818d5c4212ff2a4bcb97a9dea368f43aa8189adae2e0a47f3b3",
-"6a6956408dc73be4c1a8021287cc0ad746578be17f3d4997b31d6692aa5120e6",
-"fd4aaf22852f8a938350963fcbf656341eb044b4f84a04cf92d90a8c1a74ba46",
-"e04612d221c25966a34f08a519021ea462aa983194d6af7a14d26b5af70c2651",
-"d1575122818e79e74647d387fa6b1ff00285e57ec527c5315e69a516a6581b19",
-"852aff25bc9a2affd3b486a326834d3333576a79cbf9b71976a3b7ad227535e8",
-"85ab637d930ceb590725396d04b35dfa3dbaf21ab6f100bad82bde5a5b8c9ab1",
-"2e6bc5ebd7769f325ad06c4aa377607017918ace03c36e28b4bf40472949f9d5",
-"7d6265049bf0999ecc03b19924f0771a5d066fa93388d9d824596eb2375e0d0f",
-"a6cb9dd781461a6b583739ef0035435d425745df465c2ac1c000d2b70c1cbf5c",
-"3b993d7a30327575c0a18a1050bf7110c4615c4d22cd1333a1925b665fd38a3f",
-"c7aeea4c290824dabaca6d4b314a579afe9cfa9a8b7c78781a4c4633e59d1f79",
-"16a8588e4f074b2ed00ff1f845c391ec6aab57e63576152756ac67c7cf8e925b",
-"f5032f7cd694b6fa048aa11ffcd7f3728f0a30d8e723c633a8d56780563d27ca",
-"97b7f57610e98c700983f0d1029beae1f59b69d5f6c2bb3f1cdc729eccadbc07",
-"714f0b1fc1e34c0d20071fc923348d75ab83e0d63ff4b6e36424a5adb99b0af1",
-"a171cc38cf843664c5d94a8a19bfa565be76da1bf83ddc295015e0f0f3a5c0a9",
-"dc7d0f8dbb5f6fcf6b60cb26d23274baa5a55bc25ff5f57f34d5a18b0f736dd4",
-"c4dad3c0985385bf66f6967352468e4424f85473072e19ff46c7430ce097221b",
-"967f8522506a067dcc5135c336bc888ae46e30c2fb45e479f126a1ac7b6dd8cc",
-"0d05c571c49aa4e9a43af14dded30170f5cbe1c8a82d77191e4dff6ede60cab0",
-"2cf14a6eec8a1be8a8528a50a4c9fa8ee29391002c38523e698ce13ea5386952",
-"9f82483872296404a21dd9de1460a4cf2564c23d676e4495bf70b28418937d93",
-"8a9a0f417f1a5758e9c2bf91b11a267e3abb9db81158b612d6207a70b2341216",
-"0e5a39d8d3ae43ccb360565dcd37fdd7595bf0772023294e9fffc00b7c3c11e9",
-"bda9805d04e6f78c60c9481f136f2c28c990faf7df14d30d3c606d27fa98a581",
-"5af3acbd07640d596372bda4587c487b682fe95f6f8a51f423634500df528438",
-"90776653fd315e61b15902274ff366c9c33421c86b99e0024ae8b04544e19495",
-"ba8aebd7f1f41769d887d295f3893c80abdff3437e090e5e8da94b9fcffb26fd",
-"c4dbce5958aa6474675e913f536559fb69572e2c0de2c40aa7d59af1b24ca0ec",
-"158a34edd5e5d7cd9911848ff5a740f1c6d6de12a28f418c859fd468e052f39f",
-"65bcbffb9ee563d54a035bb6b42d89f0fe5bf957e8824ef6b7cd0e1a94229c10",
-"4ae7f96e7df3009d9356531ddca3a5c9bd4d2d55fce67c9c8c3215b8b1921424",
-"c18c595c073a3a09479602172df9ae835820618a2b8d39eea348d54114c1ff42",
-"8b2e781f3c8f690284f112ac7fb288c1b140b07af4c312c401d2e71b7dbfd8d5",
-"78cc47c96b4c2d318002f342fb0658ba4e4183294c0d7f7c3e6489c87d43f064",
-"85a3319f6c185efb8fd30d4b0178730fc1ea11713268bc262ac85b717f9b909d",
-"6f74de089f49b70f4d95f2690677d4e208dbfed6419dc82e0c226a97e0c3fa9a",
-"74e1bc8a0ef58be2b64122bca05493065a1030666ec0b562c37b7e0a7a5e74eb",
-"8b1dcee3711a86922c48afdc4b76684a0bf684444139c52d223fe697c52d7434",
-"f5966a0ec93e7cb196c9be71ff324d7e93312b7de3ccc29c70540171d4b788d6",
-"dd7cc7aae5f3828371d6cc9cc668d97fa27d44ead57352c1e7d7381e80eafe82",
-"6878a191b43765b50d687dfefd240eb7bfbd04a71508f29b5c10dc2df92b3d1e",
-"1e38a59df390797b15843a07835874f79d8f0652a082194c91075ee042133e06",
-"3553f4b46fe9719bb5a489435de3d19c9d880a54df177154ed59bdf8bb3f1aff",
-"b4f7e390f5eab18d7729b8eccecefdf19264a7129c6a469ca12da56b230104a8",
-"3243ec7364e3f1afc38c0fd1df3bca8be0982f2362690d759e34540f017cadf5",
-"d5f1ebee8891a3c8839dab42cc49f97a484af16423ea262ce151023a41f30c3c",
-"eba83bed8769d8323eb3077c2d8b404cdd34da0314fce3f3ecee3225577b5017",
-"4f8a4f7639aa944bdd84a00008b3a347587e117a8d61f8eec1c64182a1b2af8a",
-"0eef5ae8d41430f360e932db92d216a3907a4a81d7f3fd905de048ed944314bc",
-"ff36ec56797f570c3c55d82ef5cbeb3766ce157a40ab9f453edfd2de0994aa09",
-"33f37b60c8bc2ff1c55cf3d039ab5e6e67d69b2b07b5336fba92aecb22f6ccd6",
-"4b4d1247986edddf25c44c2bcb177608162cd48d21d9da5f8b1a905f6c05fc9a",
-"d6bce4e497862400e3c621b44c6a75ae9caed8f4471db821ac697ddfb8e9f898",
-"b392bad323d291719a854fe4199ec7a877cb125ee7cf9d0fe8e350e4bb326b92",
-"b4aa2500290d3e5733b2ca925129c886308d2a0934bdfe3d984fcc10c9772dd9",
-"9698dd91373c6a9adf7577ffcda35a027e1b25e2af3cd261690f578d851df47d",
-"09ec65583bfdaee78692e3ced05430be4a6386bdb0a7b1c02990d421ea902251",
-"208b317411bcf81ce28a61c185d363df872bad793b429ef9445634fa8b716ed6",
-"01f224a754cd91143870b3fcfda322219efbf1741764f8ee8dbf1ac9ef554388",
-"e6060dd0e13248951b861e6fac90e049f3045b0adfd29083b34a8b1510121108",
-"ea48d8a0f833588558f2f9530b33a600399f4c1abdba8e84d968c4d97a2199ec",
-"212680235551887e6f2ea1b79a504c19b83f0855e9fc78c4b8ee94b460990786",
-"1d0401393dd7ba0c723b686fb1be5982069ca2e1628198067f585e3be7afd7e3",
-"ff914d77fe1e7970885558f5d59387666daf99bcb3464487dbcfb4548254ac2a",
-"f82129be820775d87542ef184187382094ec1d97f934e3fc281ff90de44b05fc",
-"e1295dfaadac540fe43b3742502d2f8061d333ea99efb594ba138882de1a34f2",
-"4479e95b3dca4d6335023f91e8767d5560428c8c4e0c0650a5bdd028cc36e088",
-"16a8588e4f074b2ed00ff1f845c391ec6aab57e63576152756ac67c7cf8e925b",
-"5b90d95bac0b846e127f22f6e88b3a879296dc0f6d7004cc01298121aecacf4a",
-"25b3234c5b1d40ac38758db74e68565e9b477f6e919fc596f77b1a3bf656a926",
-"16e3be893a79bdcabb06e7f052c427028336b629ad94f4d860f85ecee72f90f3",
-"abd4198586558def2710f7e4bc4945455e2a6bdb92b47b091b38ecdd1f9a0b5d",
-"9b19e5f46b9d8fb4ed14d0978fe97248f8a29e32f0edc88598b777b93f59f6fa",
-"8917392b01d19524aec67a50bebe0d89277a498f240daef812b14e0b4d362046",
-"4c2f91a4e2f305f513e778fb0d54076e19ec761415ed099ef9be01ba37a3bd62",
-"7d42a0376d3d57b26d49d030099d862eedbc03a9cbaa119a1bb4d0c508efdae9",
-"21874b081e728ae67fd02772ea6de0126adc3dc2d7d51a4e0398b5945c998765",
-"7d3bccb13170f1220c7ba732da1a58dcdd2d6f26c712333ece2f97184827e3b3",
-"3b4a47880e032dcaf5632960979cdb1dbe0ddd574ea39d750c792249ae4a8a68",
-"725330a2f9b046386f4b115f932075fba636ef3739d1a654118ea0f46f89446e",
-"e799fccbba3788aa757f882b766484601ccec362f176a489b2c74361dd2d74f2",
-"3722e0211eafcab4e0bf062a1419954f686476974279d26086c7bb4f284d8621",
-"fac39f24ac6b44ca1094db3d5a3826db83c2bf610e9f1bfe9b56be3df175b289",
-"6cf4b3f2cbf31e143c2b212533633a191132fb88294d43f34822a872139f827f",
-"ff18b8930fa0053b61402a4ae5fd68dbbff9888bc5afdbdce2a73c7dfb95c8c4",
-"cefd3eb197c4533ee0f0fa4a515cff88e77849581363b96a2b4533217e1e2870",
-"784ebed6a768512edffbebe41b8929c07ac422048663cda858db2a8dd0785a52",
-"ae2dddc1d0e9889395c0491301347165d505ef280a00e42576b2e925e479a646",
-"9bb319b518ab813da063c404b3b03a4d7e84af4d63275930c97bfb841e070911",
-"bca7e5f37cf6a9d5e816031be158d8a724d4ddc56f5341ebfe3462c224fc66fb",
-"f2b56080b88e0760c30bd4e46302fc7945a01c84736ed0ebc97600f93c3eef6a",
-"4d8006b35513e1f70e4a80d6c646aeef516d673d9d833e9b2100f7a111f5ea59",
-"4d8006b35513e1f70e4a80d6c646aeef516d673d9d833e9b2100f7a111f5ea59",
-"f5920f30177828cb1dceb96d125a0cca41d7473e4132ec5a842d1ff7f4d07b8b",
-"a449df90f90077d15687aad6a23df76990c617a238ff499af3418f34c795a9c1",
-"94e02368944dedb539dbde90baaacbb50c0dc19e95ed00e6705f8e9781086c85",
-"26219409c2635d9bc99d8cbb0e302f7fe022af9e1469fe382b1c3fb6b919b1ac",
-"502062492ecee5b58908839ba094bbd67fa46d3447d4c82b376f09c296ff7e84",
-"6fb487b3dde0cbabe24f793d3d96cc3cc508f656d029c94bba7d03d87d3e2fa8",
-"266c3b7c83bfcbdc33c981425d40eb7d9cafa59a61cd5a15cb96089e35eea209",
-"35267e873ec29f6aae079f5050995b9a7df87290662e098c34f821dbb02e816a",
-"e7efdb6344c5693edf34ec417c65d2c0c3d85d224efaf4b51c89519a43649ec6",
-"a9097b231d9679e030f9d0de9b74fd2cb718740ac3c83481cbca94bddb2dc60f",
-"fe1178d34fe90705241fc39f548ad56eaf90b77adff9c94bc926fbeea15f67a0",
-"43c26bfd22a53996fcd489ca97d0e74a2a3f4b46b436e2038a936361d5066e08",
-"cab73cb62aeedcb8fbf39db7017b73063c58153b336365060344e2cf532f7570",
-"d31452b45a56d171a966c72a84777f235a24ce61365b0cdee0dd70c4bb7db458",
-"a6744f196c14220deb9ccd03542a8d41cf1c4a40fbc19c4ba61430f7eb50b872",
-"2524d2770238fadd463734b01e3e5e078b1db8a0fbd81603a0645bf7be8db842",
-"97ec8e0fb5bad21ecd6838a44554dc57d42c2e6a73c5ac0da4db05a330a214fc",
-"f34f9e3b9a41fc27438935e1b8b2119d72827c1d773d0b9cb172a614d42dbc34",
-"c3125b8208a46cc054831119386d71345f97e2f850b466a233422862b3d2dd62",
-"8d9c745c1e364f3f2b27063779e4a6f0ef9781083956d41f9889ecff986704a4",
-"80dce2efe0cbe479279fdf9c45dcefe709606dc18e5b8660996ca845170b5071",
-"66a0e6eedc6d0344ae67615e9661e5627c1aac78c8798d2e1f4460599653fdfb",
-"6269d2ce1907ca01441cb3abbcc53eb4281d8449d1485b18ddad588c195f3883",
-"b6711cda3c177054981c3a23937b76bcf3a5bf7623b69b722e428cad402e8c10",
-"574cb968c82d8874fd15a3a15bd33bdfcf6438af817e9ac06d1e1596e979e6ff",
-"eedf2f47155a9803f539d40579b863c95b4b51c755d6bac54269fad27ec4801c",
-"ff204c744a41e446e592ad58f4bc8574504cda8346681c8ad6ffcb78fd06d701",
-"a3c3e51da1f347966b407f0804a6f71f66210967d2bd4b32084931dcaa475e11",
-"8fa0166bcdb1b7f1de637b88661e8303eeebb023666c8893dfa260afaee9d524",
-"bfa623607859eb6e6ccdaba42ddd82fea4d801394cbddc41eab910edf705bdb2",
-"9f3d4cc66a8ec174342a5fd969a4f8149e22426e7c818ba09a13e2a7d2afb912",
-"e1b1a80977154567f55df49840b52f44b1066e467443fb23cc99304629dd3b00",
-"8a53c8da6de10e71591a8d86be91b6db62155bd1f8327f1509b922b407f51fdf",
-"4b3d496c927e5d1ee4117c35ffb1a400b278e5e6edb18928169b0651459e2367",
-"6a82f7e8c2285591ccfd9c20ffdbd710f0f5186d1e0334d3b03f639e53f087ac",
-"4743240db87fee6fe5fe0a4e26ae7b434d3e469304b4e3dfea1abc9a6a6c25de",
-"be525a284bdb80181e1a64c0ee5886d4c43bc8cb26e810dcb64c16fdc30651bb",
-"369572b1591584c214de110a1565f91013e075d01ad09c3728d5283210406ef4",
-"381e452e51ca5d703795056ce945ca618711803633cdfd92438994fa638b508b"]; //initial whitelist
+  var initialWhitelist : [AccountIdentifier] = []; //initial whitelist
   
   //Set different price types here
   func getAddressBulkPrice(address : AccountIdentifier) : [(Nat64, Nat64)] {
@@ -434,12 +303,33 @@ actor class ObsidianTears() = this {
     _tokensForSale := switch(_owners.get("0000")){ case(?t) t; case(_) []};
     if (reservedAmount > 0) {
       for(t in nextTokens(reservedAmount).vals()){
-        _transferTokenToUser(t, teamNftAddress);
+        await _transferTokenToUser(t, teamNftAddress);
       };
     };
     _tokensForSale := shuffleTokens(_tokensForSale);
     for(a in airdrop.vals()){
-      _transferTokenToUser(nextTokens(1)[0], a);
+      await _transferTokenToUser(nextTokens(1)[0], a);
+    };
+    // airdrop to all og holders
+    let ogHodlers : HashMap.HashMap<TokenIndex,AccountIdentifier> = HashMap.mapFilter<TokenIndex, AccountIdentifier, AccountIdentifier>(
+      _registry, ExtCore.TokenIndex.equal, ExtCore.TokenIndex.hash, func (i, ai) : ?AccountIdentifier {
+        switch(_tokenMetadata.get(i)) {
+          case(?#nonfungible nft) {
+            switch(nft.metadata) {
+              case(?blob) {
+                if (Blob.toArray(blob)[11] == 1) {
+                  return ?ai;
+                };
+                null;
+              };
+              case(_) null;
+            }; 
+          };
+          case(_) null;
+        };
+    }); 
+    for (o in ogHodlers.vals()) {
+      await _transferTokenToUser(nextTokens(1)[0], o);
     };
     _totalToSell := _tokensForSale.size();
     _hasBeenInitiated := true;
@@ -615,7 +505,7 @@ actor class ObsidianTears() = this {
               } else {
                 var tokens = nextTokens(Nat64.fromNat(settlement.tokens.size()));
                 for (a in tokens.vals()){
-                  _transferTokenToUser(a, settlement.buyer);
+                  await _transferTokenToUser(a, settlement.buyer);
                 };
                 _saleTransactions := _append(_saleTransactions, {
                   tokens = tokens;
@@ -822,7 +712,7 @@ actor class ObsidianTears() = this {
                   };
                   _addDisbursement((token, token_owner, settlement.subaccount, rem));
                   _capAddSale(token, token_owner, settlement.buyer, settlement.price);
-                  _transferTokenToUser(token, settlement.buyer);
+                  await _transferTokenToUser(token, settlement.buyer);
                   _transactions := _append(_transactions, {
                     token = tokenid;
                     seller = settlement.seller;
@@ -1078,18 +968,18 @@ actor class ObsidianTears() = this {
               switch(await notifier.tokenTransferNotification(request.token, request.from, request.amount, request.memo)) {
                 case (?balance) {
                   if (balance == 1) {
-                    _transferTokenToUser(token, receiver);
+                    await _transferTokenToUser(token, receiver);
     _capAddTransfer(token, owner, receiver);
                     return #ok(request.amount);
                   } else {
                     //Refund
-                    _transferTokenToUser(token, owner);
+                    await _transferTokenToUser(token, owner);
                     return #err(#Rejected);
                   };
                 };
                 case (_) {
                   //Refund
-                  _transferTokenToUser(token, owner);
+                  await _transferTokenToUser(token, owner);
                   return #err(#Rejected);
                 };
               };
@@ -1099,7 +989,7 @@ actor class ObsidianTears() = this {
             }
           };
         } else {
-          _transferTokenToUser(token, receiver);
+          await _transferTokenToUser(token, receiver);
     _capAddTransfer(token, owner, receiver);
           return #ok(request.amount);
         };
@@ -1510,9 +1400,13 @@ actor class ObsidianTears() = this {
       case (_) {};
     };
   };
-  func _transferTokenToUser(tindex : TokenIndex, receiver : AccountIdentifier) : () {
+  func _transferTokenToUser(tindex : TokenIndex, receiver : AccountIdentifier) : async () {
     let owner : ?AccountIdentifier = _getBearer(tindex);
     _registry.put(tindex, receiver);
+    // get the equipped items from game canister
+    let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems({characterIndex = tindex});
+    // transfer equipped items to new account
+    await _itemActor.transferTokensToUser(itemIndices, receiver);
     switch(owner){
       case (?o) _removeFromUserTokens(tindex, o);
       case (_) {};
@@ -1626,7 +1520,7 @@ actor class ObsidianTears() = this {
     assert(msg.caller == _minter);
     for(a in tomint.vals()){
       _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(a) }));
-      _transferTokenToUser(_nextTokenId, "0000");
+      await _transferTokenToUser(_nextTokenId, "0000");
       _supply := _supply + 1;
       _nextTokenId := _nextTokenId + 1;
     };
@@ -1654,5 +1548,23 @@ actor class ObsidianTears() = this {
   public shared(msg) func addWhitelistWallets(walletAddresses : [AccountIdentifier]) : () {
     assert(msg.caller == _minter);
     _whitelist := _appendAll(_whitelist, walletAddresses);
+  };
+
+  // create function to reset launch
+  public shared(msg) func prepLaunch(
+  ) : () {
+    assert(msg.caller == _minter);
+    _whitelist := [];
+    _hasBeenInitiated := false;
+  };
+
+  // create function to burn zero address nfts
+  public shared(msg) func burnRemainingNfts() : () {
+    assert(msg.caller == _minter);
+    let tokensToBurn : [TokenIndex] = switch(_owners.get("0000")){ case(?t) t; case(_) []};
+    for (index in _registry.vals()) {
+      await _transferTokenToUser(_nextTokenId, _blackhole);
+      _supply := _supply - 1;
+    };
   };
 }
