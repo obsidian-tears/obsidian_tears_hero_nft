@@ -138,7 +138,7 @@ actor class ObsidianTears() = this {
     canister : Text;
   };
   //OBSIDIAN TEARS
-  let _gameActor = actor("gagfs-yqaaa-aaaao-aaiva-cai") : actor { getEquippedItems : ({characterIndex : TokenIndex}) -> async [TokenIndex]}; 
+  let _gameActor = actor("gagfs-yqaaa-aaaao-aaiva-cai") : actor { getEquippedItems : (characterIndex : TokenIndex) -> async [TokenIndex]}; 
   let _itemActor = actor("goei2-daaaa-aaaao-aaiua-cai") : actor { transferTokensToUser : (tindices : [TokenIndex], receiver : AccountIdentifier) -> async ()}; 
   let _blackhole = "the_blackhole";
 
@@ -1404,7 +1404,7 @@ actor class ObsidianTears() = this {
   func _transferTokenToUser(tindex : TokenIndex, receiver : AccountIdentifier) : async () {
     _transferTokenToUserSynchronous(tindex, receiver);
     // get the equipped items from game canister
-    let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems({characterIndex = tindex});
+    let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems(tindex);
     // transfer equipped items to new account
     await _itemActor.transferTokensToUser(itemIndices, receiver);
   };
