@@ -313,6 +313,7 @@ actor class ObsidianTears() = this {
     // airdrop to all og holders
     let ogHodlers : HashMap.HashMap<TokenIndex,AccountIdentifier> = HashMap.mapFilter<TokenIndex, AccountIdentifier, AccountIdentifier>(
       _registry, ExtCore.TokenIndex.equal, ExtCore.TokenIndex.hash, func (i, ai) : ?AccountIdentifier {
+        if (ai == "0000" or ai == _blackhole) return null;
         switch(_tokenMetadata.get(i)) {
           case(?#nonfungible nft) {
             switch(nft.metadata) {
