@@ -303,12 +303,12 @@ actor class ObsidianTears() = this {
     _tokensForSale := switch(_owners.get("0000")){ case(?t) t; case(_) []};
     if (reservedAmount > 0) {
       for(t in nextTokens(reservedAmount).vals()){
-        await _transferTokenToUser(t, teamNftAddress);
+        _transferTokenToUserSynchronous(t, teamNftAddress);
       };
     };
     _tokensForSale := shuffleTokens(_tokensForSale);
     for(a in airdrop.vals()){
-      await _transferTokenToUser(nextTokens(1)[0], a);
+      _transferTokenToUserSynchronous(nextTokens(1)[0], a);
     };
     // airdrop to all og holders
     let ogHodlers : HashMap.HashMap<TokenIndex,AccountIdentifier> = HashMap.mapFilter<TokenIndex, AccountIdentifier, AccountIdentifier>(
@@ -330,7 +330,7 @@ actor class ObsidianTears() = this {
         };
     }); 
     for (o in ogHodlers.vals()) {
-      await _transferTokenToUser(nextTokens(1)[0], o);
+      _transferTokenToUserSynchronous(nextTokens(1)[0], o);
     };
     _totalToSell := _tokensForSale.size();
     _hasBeenInitiated := true;
@@ -1402,12 +1402,15 @@ actor class ObsidianTears() = this {
     };
   };
   func _transferTokenToUser(tindex : TokenIndex, receiver : AccountIdentifier) : async () {
-    let owner : ?AccountIdentifier = _getBearer(tindex);
-    _registry.put(tindex, receiver);
+    _transferTokenToUserSynchronous(tindex, receiver);
     // get the equipped items from game canister
     let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems({characterIndex = tindex});
     // transfer equipped items to new account
     await _itemActor.transferTokensToUser(itemIndices, receiver);
+  };
+  func _transferTokenToUserSynchronous(tindex : TokenIndex, receiver : AccountIdentifier) : () {
+    let owner : ?AccountIdentifier = _getBearer(tindex);
+    _registry.put(tindex, receiver);
     switch(owner){
       case (?o) _removeFromUserTokens(tindex, o);
       case (_) {};
@@ -1521,7 +1524,7 @@ actor class ObsidianTears() = this {
     assert(msg.caller == _minter);
     for(a in tomint.vals()){
       _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(a) }));
-      await _transferTokenToUser(_nextTokenId, "0000");
+      _transferTokenToUserSynchronous(_nextTokenId, "0000");
       _supply := _supply + 1;
       _nextTokenId := _nextTokenId + 1;
     };
