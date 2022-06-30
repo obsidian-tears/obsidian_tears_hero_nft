@@ -1405,9 +1405,9 @@ actor class ObsidianTears() = this {
     let owner : ?AccountIdentifier = _getBearer(tindex);
     _registry.put(tindex, receiver);
     // get the equipped items from game canister
-    // let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems({characterIndex = tindex});
+    let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems({characterIndex = tindex});
     // transfer equipped items to new account
-    // await _itemActor.transferTokensToUser(itemIndices, receiver);
+    await _itemActor.transferTokensToUser(itemIndices, receiver);
     switch(owner){
       case (?o) _removeFromUserTokens(tindex, o);
       case (_) {};
