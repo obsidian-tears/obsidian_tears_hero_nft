@@ -1566,6 +1566,7 @@ actor class ObsidianTears() = this {
       await _transferTokenToUser(index, _blackhole);
       _supply := _supply - 1;
     };
+    _totalToSell := 0;
     tokensToBurn;
   };
 }
