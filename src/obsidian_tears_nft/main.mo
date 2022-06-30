@@ -1404,9 +1404,9 @@ actor class ObsidianTears() = this {
     let owner : ?AccountIdentifier = _getBearer(tindex);
     _registry.put(tindex, receiver);
     // get the equipped items from game canister
-    let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems({characterIndex = tindex});
+    // let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems({characterIndex = tindex});
     // transfer equipped items to new account
-    await _itemActor.transferTokensToUser(itemIndices, receiver);
+    // await _itemActor.transferTokensToUser(itemIndices, receiver);
     switch(owner){
       case (?o) _removeFromUserTokens(tindex, o);
       case (_) {};
@@ -1559,12 +1559,13 @@ actor class ObsidianTears() = this {
   };
 
   // create function to burn zero address nfts
-  public shared(msg) func burnRemainingNfts() : () {
+  public shared(msg) func burnRemainingNfts() : async [TokenIndex] {
     assert(msg.caller == _minter);
     let tokensToBurn : [TokenIndex] = switch(_owners.get("0000")){ case(?t) t; case(_) []};
-    for (index in _registry.vals()) {
-      await _transferTokenToUser(_nextTokenId, _blackhole);
+    for (index in tokensToBurn.vals()) {
+      await _transferTokenToUser(index, _blackhole);
       _supply := _supply - 1;
     };
+    tokensToBurn;
   };
 }
