@@ -265,7 +265,7 @@ actor class ObsidianTears() = this {
 "89211bf7a4a2a10a44a58c4252f72267d8ca8a09a3da043510e69d428f5b8183",
 "a50f2c70a60222c3e1f666cfb033f05f66805ebda4b15a2935cac64e13597910",
 "12bc158b6aad670322f4bfc177b6fc61bbb51d02816fcc26fb187ed9301df7ce"]; //Airdrops
-  var reservedAmount : Nat64 = 0; //Reserved
+  var reservedAmount : Nat64 = 50; //Reserved
   var saleCommission : Nat64 = 6000; //Sale price
   var salePrice : Nat64 = 500000000; //Sale price
   var whitelistPrice : Nat64 = salePrice; //Discount price
