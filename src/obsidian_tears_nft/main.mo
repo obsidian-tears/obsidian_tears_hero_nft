@@ -29,6 +29,8 @@ import ExtCore "../motoko/ext/Core";
 import ExtNonFungible "../motoko/ext/NonFungible";
 import SVG "../svg";
 
+// TODO: account for transactions that may fail to send items along with characters
+
 actor class ObsidianTears() = this {
   
   // Types
@@ -184,11 +186,10 @@ actor class ObsidianTears() = this {
     _salesPrincipalsState := Iter.toArray(_salesPrincipals.entries());
     //EXTv2 SALE
     _disbursementsState := List.toArray(_disbursements);
-    
     //Cap
     _capEventsState := List.toArray(_capEvents);
-    
   };
+
   system func postupgrade() {
     _registryState := [];
     _tokenMetadataState := [];
@@ -506,7 +507,7 @@ actor class ObsidianTears() = this {
               } else {
                 var tokens = nextTokens(Nat64.fromNat(settlement.tokens.size()));
                 for (a in tokens.vals()){
-                  await _transferTokenToUser(a, settlement.buyer);
+                  ignore(_transferTokenToUser(a, settlement.buyer));
                 };
                 _saleTransactions := _append(_saleTransactions, {
                   tokens = tokens;
@@ -713,7 +714,7 @@ actor class ObsidianTears() = this {
                   };
                   _addDisbursement((token, token_owner, settlement.subaccount, rem));
                   _capAddSale(token, token_owner, settlement.buyer, settlement.price);
-                  await _transferTokenToUser(token, settlement.buyer);
+                  ignore(_transferTokenToUser(token, settlement.buyer));
                   _transactions := _append(_transactions, {
                     token = tokenid;
                     seller = settlement.seller;
@@ -969,18 +970,18 @@ actor class ObsidianTears() = this {
               switch(await notifier.tokenTransferNotification(request.token, request.from, request.amount, request.memo)) {
                 case (?balance) {
                   if (balance == 1) {
-                    await _transferTokenToUser(token, receiver);
+                    ignore(_transferTokenToUser(token, receiver));
     _capAddTransfer(token, owner, receiver);
                     return #ok(request.amount);
                   } else {
                     //Refund
-                    await _transferTokenToUser(token, owner);
+                    ignore(_transferTokenToUser(token, owner));
                     return #err(#Rejected);
                   };
                 };
                 case (_) {
                   //Refund
-                  await _transferTokenToUser(token, owner);
+                  ignore(_transferTokenToUser(token, owner));
                   return #err(#Rejected);
                 };
               };
@@ -990,7 +991,7 @@ actor class ObsidianTears() = this {
             }
           };
         } else {
-          await _transferTokenToUser(token, receiver);
+          ignore(_transferTokenToUser(token, receiver));
     _capAddTransfer(token, owner, receiver);
           return #ok(request.amount);
         };
@@ -1406,7 +1407,7 @@ actor class ObsidianTears() = this {
     // get the equipped items from game canister
     let itemIndices : [TokenIndex] = await _gameActor.getEquippedItems(tindex);
     // transfer equipped items to new account
-    await _itemActor.transferTokensToUser(itemIndices, receiver);
+    ignore(_itemActor.transferTokensToUser(itemIndices, receiver));
   };
   func _transferTokenToUserSynchronous(tindex : TokenIndex, receiver : AccountIdentifier) : () {
     let owner : ?AccountIdentifier = _getBearer(tindex);
@@ -1567,7 +1568,7 @@ actor class ObsidianTears() = this {
     assert(msg.caller == _minter);
     let tokensToBurn : [TokenIndex] = switch(_owners.get("0000")){ case(?t) t; case(_) []};
     for (index in tokensToBurn.vals()) {
-      await _transferTokenToUser(index, _blackhole);
+      ignore(_transferTokenToUser(index, _blackhole));
       _supply := _supply - 1;
     };
     _totalToSell := 0;
