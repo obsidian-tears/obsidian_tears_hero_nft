@@ -12,5 +12,13 @@
       "packtool": "vessel sources",
       "args": ""
     }
+  },
+  "networks": {
+    "staging": {
+      "providers": [
+        "https://ic0.app"
+      ],
+      "type": "persistent"
+    }
   }
 }
