@@ -1592,7 +1592,7 @@ actor class ObsidianTears() = this {
   };
 
   // use this function to mint development nfts
-  public shared ({ caller }) func _mintAndTransferDevHero(principalToTransfer : Principal) : async Result.Result<(), CommonError> {
+  public shared ({ caller }) func _mintAndTransferDevHero(accountIdToTransfer : Text) : async Result.Result<(), CommonError> {
     if (Env.network == "ic") return #err(#Unauthorized); // only local and staging is allowed
     if (caller != _minter) return #err(#Unauthorized);
 
@@ -1601,7 +1601,7 @@ actor class ObsidianTears() = this {
 
     // mint and transfer nft
     _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(metadataToMint) }));
-    _transferTokenToUserSynchronous(_nextTokenId, Principal.toText(principalToTransfer));
+    _transferTokenToUserSynchronous(_nextTokenId, accountIdToTransfer);
     _supply := _supply + 1;
     _nextTokenId := _nextTokenId + 1;
 
