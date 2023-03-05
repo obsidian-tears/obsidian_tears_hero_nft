@@ -50,7 +50,6 @@ actor class ObsidianTears() = this {
   type TransferResponse = ExtCore.TransferResponse;
   type AllowanceRequest = ExtAllowance.AllowanceRequest;
   type ApproveRequest = ExtAllowance.ApproveRequest;
-  // Metadata :[UInt8] => [background, class badge, outfit, skin, scar(binary), eyes, hair, hood, magic ring, cape, weapon, og badge(binary)]
   type Metadata = ExtCommon.Metadata;
   type NotifyService = ExtCore.NotifyService;
   type MintingRequest = {
@@ -1590,6 +1589,23 @@ actor class ObsidianTears() = this {
       _supply := _supply + 1;
       _nextTokenId := _nextTokenId + 1;
     };
+  };
+
+  // use this function to mint development nfts
+  public shared ({ caller }) func _mintAndTransferDevHero(accountIdToTransfer : Text) : async Result.Result<(), CommonError> {
+    if (Env.network == "ic") return #err(#Unauthorized); // only local and staging is allowed
+    if (caller != _minter) return #err(#Unauthorized);
+
+    // create initial hero nft
+    let metadataToMint : [Nat8] = [2, 2, 5, 3, 0, 0, 1, 0, 0, 2, 13, 0];
+
+    // mint and transfer nft
+    _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(metadataToMint) }));
+    _transferTokenToUserSynchronous(_nextTokenId, accountIdToTransfer);
+    _supply := _supply + 1;
+    _nextTokenId := _nextTokenId + 1;
+
+    #ok();
   };
 
   func textToNat32(txt : Text) : Nat32 {
