@@ -1,4 +1,4 @@
-# obsidian_tears_nft
+# obsidian_tears_hero_nft
 
 This repo is responsible for holding the data of **Hero NFTs** of Obsidian Tears and handling any logic related to them.
 
