@@ -7,7 +7,7 @@ module {
         if (network == "beta") return "2tncs-liaaa-aaaan-qdapq-cai";
 
         // else "local"
-        return "qvhpv-4qaaa-aaaaa-aaagq-cai";
+        return "bkyz2-fmaaa-aaaaa-qaaaq-cai";
     };
 
     public func getItemCanisterId() : Text {
@@ -16,7 +16,7 @@ module {
         if (network == "beta") return "7tscg-xaaaa-aaaan-qdasa-cai";
 
         // else local
-        return "renrk-eyaaa-aaaaa-aaada-cai";
+        return "b77ix-eeaaa-aaaaa-qaada-cai";
     };
 
     public func getAdminPrincipal() : Text {

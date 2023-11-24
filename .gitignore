@@ -11,9 +11,12 @@
 .dfx/
 src/declarations
 
-# frontend code
+# Packages
 node_modules/
+.mops
+
+# Build files
 dist/
 
-# vessel
-.vessel
+# environment vars
+.env

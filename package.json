@@ -1,0 +1,13 @@
+{
+  "name": "obsidian_tears_hero_nft",
+  "version": "1.0.0",
+  "description": "This repo is responsible for holding the data of **Hero NFTs** of Obsidian Tears and handling any logic related to them.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ic-mops": "^0.34.4"
+  }
+}
