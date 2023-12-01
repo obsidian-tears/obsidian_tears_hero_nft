@@ -18,6 +18,8 @@ import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
+import Debug "mo:base/Debug";
+import Canistergeek "mo:canistergeek/canistergeek";
 
 import Cap "mo:cap/Cap";
 import Encoding "mo:encoding/Binary";
@@ -192,6 +194,10 @@ actor class ObsidianTears() = this {
     _disbursementsState := List.toArray(_disbursements);
     //Cap
     _capEventsState := List.toArray(_capEvents);
+
+    // canistergeek
+    _canistergeekMonitorUD := ?canistergeekMonitor.preupgrade();
+    _canistergeekLoggerUD := ?canistergeekLogger.preupgrade();
   };
 
   system func postupgrade() {
@@ -210,6 +216,13 @@ actor class ObsidianTears() = this {
     //Cap
     _capEventsState := [];
 
+    // canistergeek
+    canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
+    _canistergeekMonitorUD := null;
+    canistergeekLogger.postupgrade(_canistergeekLoggerUD);
+    _canistergeekLoggerUD := null;
+    canistergeekLogger.setMaxMessagesCount(3000);
+    canistergeekLogger.logMessage("postupgrade");
   };
 
   //Sale
@@ -324,7 +337,7 @@ actor class ObsidianTears() = this {
       func(i, ai) : ?AccountIdentifier {
         if (ai == "0000" or ai == _blackhole) return null;
         switch (_tokenMetadata.get(i)) {
-          case (?#nonfungible nft) {
+          case (? #nonfungible nft) {
             switch (nft.metadata) {
               case (?blob) {
                 if (Blob.toArray(blob)[11] == 1) {
@@ -1193,8 +1206,8 @@ actor class ObsidianTears() = this {
                 func(a : SubAccount) : Bool {
                   Array.equal(a, p, Nat8.equal);
                 },
-              ),
-            ),
+              )
+            )
           ) {
             newPayments := _append(newPayments, p);
           };
@@ -1279,7 +1292,7 @@ actor class ObsidianTears() = this {
         switch (_getTokenIndex(tokenid)) {
           case (?index) {
             switch (_tokenMetadata.get(index)) {
-              case (?#nonfungible r) {
+              case (? #nonfungible r) {
                 switch (r.metadata) {
                   case (?data) {
                     switch (_getParam(request.url, "type")) {
@@ -1318,7 +1331,7 @@ actor class ObsidianTears() = this {
     switch (_getParam(request.url, "index")) {
       case (?index) {
         switch (_tokenMetadata.get(textToNat32(index))) {
-          case (?#nonfungible r) {
+          case (? #nonfungible r) {
             switch (r.metadata) {
               case (?data) {
                 switch (_getParam(request.url, "type")) {
@@ -1371,7 +1384,7 @@ actor class ObsidianTears() = this {
       status_code = 200;
       headers = [("content-type", "text/plain")];
       body = Text.encodeUtf8(
-        nftCollectionName # "\n" # "---\n" # "Cycle Balance:                            ~" # debug_show (Cycles.balance() / 1000000000000) # "T\n" # "Minted NFTs:                              " # debug_show (_nextTokenId) # "\n" # "---\n" # "Whitelist:                                " # debug_show (_whitelist.size() : Nat) # "\n" # "Total to sell:                            " # debug_show (_totalToSell) # "\n" # "Remaining:                                " # debug_show (availableTokens()) # "\n" # "Sold:                                     " # debug_show (_sold) # "\n" # "Sold (ICP):                               " # _displayICP(Nat64.toNat(_soldIcp)) # "\n" # "---\n" # "Marketplace Listings:                     " # debug_show (_tokenListing.size()) # "\n" # "Sold via Marketplace:                     " # debug_show (_transactions.size()) # "\n" # "Sold via Marketplace in ICP:              " # _displayICP(soldValue) # "\n" # "Average Price ICP Via Marketplace:        " # _displayICP(avg) # "\n" # "---\n" # "Admin:                                    " # debug_show (_minter) # "\n",
+        nftCollectionName # "\n" # "---\n" # "Cycle Balance:                            ~" # debug_show (Cycles.balance() / 1000000000000) # "T\n" # "Minted NFTs:                              " # debug_show (_nextTokenId) # "\n" # "---\n" # "Whitelist:                                " # debug_show (_whitelist.size() : Nat) # "\n" # "Total to sell:                            " # debug_show (_totalToSell) # "\n" # "Remaining:                                " # debug_show (availableTokens()) # "\n" # "Sold:                                     " # debug_show (_sold) # "\n" # "Sold (ICP):                               " # _displayICP(Nat64.toNat(_soldIcp)) # "\n" # "---\n" # "Marketplace Listings:                     " # debug_show (_tokenListing.size()) # "\n" # "Sold via Marketplace:                     " # debug_show (_transactions.size()) # "\n" # "Sold via Marketplace in ICP:              " # _displayICP(soldValue) # "\n" # "Average Price ICP Via Marketplace:        " # _displayICP(avg) # "\n" # "---\n" # "Admin:                                    " # debug_show (_minter) # "\n"
       );
       streaming_strategy = null;
     };
@@ -1426,6 +1439,35 @@ actor class ObsidianTears() = this {
   };
   public query func availableCycles() : async Nat {
     return Cycles.balance();
+  };
+
+  // -----------------------------------
+  // canistergeek
+  // -----------------------------------
+
+  stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
+  private let canistergeekMonitor = Canistergeek.Monitor();
+
+  stable var _canistergeekLoggerUD : ?Canistergeek.LoggerUpgradeData = null;
+  private let canistergeekLogger = Canistergeek.Logger();
+
+  private let adminPrincipal : Text = "csvbe-getzk-3k2vt-boxl5-v2mzn-rzn23-oraa7-gjauz-dvoyn-upjlb-3ae";
+
+  public query ({ caller }) func getCanistergeekInformation(request : Canistergeek.GetInformationRequest) : async Canistergeek.GetInformationResponse {
+    validateCaller(caller);
+    Canistergeek.getInformation(?canistergeekMonitor, ?canistergeekLogger, request);
+  };
+
+  public shared ({ caller }) func updateCanistergeekInformation(request : Canistergeek.UpdateInformationRequest) : async () {
+    validateCaller(caller);
+    canistergeekMonitor.updateInformation(request);
+  };
+
+  private func validateCaller(principal : Principal) : () {
+    // data is available only for specific principal
+    if (not (Principal.toText(principal) == adminPrincipal)) {
+      Debug.trap("Not Authorized");
+    };
   };
 
   //Private
