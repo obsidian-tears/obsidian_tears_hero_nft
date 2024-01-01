@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dfx": "0.15.1",
+  "dfx": "0.15.2",
   "canisters": {
     "obsidian_tears_nft": {
       "type": "motoko",
@@ -9,21 +9,17 @@
   },
   "defaults": {
     "build": {
-      "packtool": "npx mops sources",
+      "packtool": "mops sources",
       "args": ""
     }
   },
   "networks": {
     "staging": {
-      "providers": [
-        "https://icp0.io"
-      ],
+      "providers": ["https://icp0.io"],
       "type": "persistent"
     },
     "beta": {
-      "providers": [
-        "https://icp0.io"
-      ],
+      "providers": ["https://icp0.io"],
       "type": "persistent"
     }
   }
