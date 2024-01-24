@@ -24,11 +24,11 @@ import Canistergeek "mo:canistergeek/canistergeek";
 import Cap "mo:cap/Cap";
 import Encoding "mo:encoding/Binary";
 
-import AID "motoko/util/AccountIdentifier";
-import ExtAllowance "motoko/ext/Allowance";
-import ExtCommon "motoko/ext/Common";
-import ExtCore "motoko/ext/Core";
-import ExtNonFungible "motoko/ext/NonFungible";
+import AID "lib/util/AccountIdentifier";
+import ExtAllowance "lib/ext/Allowance";
+import ExtCommon "lib/ext/Common";
+import ExtCore "lib/ext/Core";
+import ExtNonFungible "lib/ext/NonFungible";
 import SVG "svg";
 import Env "env";
 
