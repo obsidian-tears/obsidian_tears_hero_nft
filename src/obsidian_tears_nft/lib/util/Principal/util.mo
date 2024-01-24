@@ -1,6 +1,7 @@
 import Array "mo:base/Array";
 import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
+import Buffer "mo:base/Buffer";
 
 module Util {
     public func nat8ToNat32(n : Nat8) : Nat32 {
@@ -21,13 +22,13 @@ module Util {
     };
 
     public func drop<A>(xs : [A], n : Nat) : [A] {
-        var ys : [A] = [];
+        var ys = Buffer.fromArray<A>([]);
         for (i in xs.keys()) {
             if (i >= n) {
-                ys := Array.append(ys, [xs[i]])
+                ys.add(xs[i]);
             };
         };
-        ys;
+        Buffer.toArray(ys);
     };
 
     public func take<A>(xs : [A], n : Nat) : [A] {

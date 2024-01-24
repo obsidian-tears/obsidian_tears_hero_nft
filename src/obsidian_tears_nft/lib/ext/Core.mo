@@ -11,6 +11,7 @@ import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
+import Buffer "mo:base/Buffer";
 //TODO pull in better
 import AID "../util/AccountIdentifier";
 import Hex "../util/Hex";
@@ -52,7 +53,8 @@ module ExtCore = {
     notify : Bool;
     subaccount : ?SubAccount;
   };
-  public type TransferResponse = Result.Result<Balance, { #Unauthorized : AccountIdentifier; #InsufficientBalance; #Rejected; /* Rejected by canister */ #InvalidToken : TokenIdentifier; #CannotNotify : AccountIdentifier; #Other : Text }>;
+  public type TransferResponse = Result.Result<Balance, { #Unauthorized : AccountIdentifier; #InsufficientBalance; #Rejected; /* Rejected by canister */
+  #InvalidToken : TokenIdentifier; #CannotNotify : AccountIdentifier; #Other : Text }>;
   public type NotifyCallback = shared (TokenIdentifier, User, Balance, Memo) -> async ?Balance;
   public type NotifyService = actor {
     tokenTransferNotification : NotifyCallback;
@@ -89,7 +91,10 @@ module ExtCore = {
       return fromBytes(Blob.toArray(b), i);
     };
     public func fromBytes(c : [Nat8], i : TokenIndex) : TokenIdentifier {
-      let bytes : [Nat8] = Array.append(Array.append(tds, c), nat32tobytes(i));
+      let tempBuffer = Buffer.fromArray<Nat8>(tds);
+      tempBuffer.append(Buffer.fromArray<Nat8>(c));
+      tempBuffer.append(Buffer.fromArray<Nat8>(nat32tobytes(i)));
+      let bytes : [Nat8] = Buffer.toArray(tempBuffer);
       return Principal.toText(PrincipalEXT.fromBlob(Blob.fromArray(bytes)));
     };
     //Coz can't get principal directly, we can compare the bytes
@@ -108,10 +113,14 @@ module ExtCore = {
       var _token_index : [Nat8] = [];
       var _tdscheck : [Nat8] = [];
       var length : Nat8 = 0;
+      var tempBuffer = Buffer.Buffer<Nat8>(0);
+
       for (b in bytes.vals()) {
         length += 1;
         if (length <= 4) {
-          _tdscheck := Array.append(_tdscheck, [b]);
+          tempBuffer := Buffer.fromArray(_tdscheck);
+          tempBuffer.add(b);
+          _tdscheck := Buffer.toArray(tempBuffer);
         };
         if (length == 4) {
           if (Array.equal(_tdscheck, tds, Nat8.equal) == false) {
@@ -126,9 +135,13 @@ module ExtCore = {
         index += 1;
         if (index >= 5) {
           if (index <= (length - 4)) {
-            _canister := Array.append(_canister, [b]);
+            tempBuffer := Buffer.fromArray(_canister);
+            tempBuffer.add(b);
+            _canister := Buffer.toArray(tempBuffer);
           } else {
-            _token_index := Array.append(_token_index, [b]);
+            tempBuffer := Buffer.fromArray(_token_index);
+            tempBuffer.add(b);
+            _token_index := Buffer.toArray(tempBuffer);
           };
         };
       };
