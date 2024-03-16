@@ -1287,6 +1287,8 @@ actor class ObsidianTears() = this {
     let height : Text = imageHeight;
     let ctype : Text = imageType;
     let path = Iter.toArray(Text.tokens(request.url, #text("/")));
+    let battle = Text.equal(Option.get(_getParam(request.url, "battle"), "false"), "true");
+
     switch (_getParam(request.url, "tokenid")) {
       case (?tokenid) {
         switch (_getTokenIndex(tokenid)) {
@@ -1302,7 +1304,7 @@ actor class ObsidianTears() = this {
                           return {
                             status_code = 200;
                             headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                            body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
+                            body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width, battle));
                             streaming_strategy = null;
                           };
                         };
@@ -1313,7 +1315,7 @@ actor class ObsidianTears() = this {
                     return {
                       status_code = 200;
                       headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                      body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
+                      body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width, battle));
                       streaming_strategy = null;
                     };
                   };
@@ -1340,7 +1342,7 @@ actor class ObsidianTears() = this {
                       return {
                         status_code = 200;
                         headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                        body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
+                        body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width, battle));
                         streaming_strategy = null;
                       };
                     };
@@ -1350,7 +1352,7 @@ actor class ObsidianTears() = this {
                 return {
                   status_code = 200;
                   headers = [("content-type", ctype), ("cache-control", "public, max-age=15552000")];
-                  body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width));
+                  body = Text.encodeUtf8(SVG.make(Blob.toArray(data), height, width, battle));
                   streaming_strategy = null;
                 };
               };

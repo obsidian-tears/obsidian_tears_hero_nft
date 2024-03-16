@@ -18,7 +18,7 @@ import Weapons "elements/weapons";
 // order of assets
 
 module {
-  public func make(seed : [Nat8], height : Text, width : Text) : Text {
+  public func make(seed : [Nat8], height : Text, width : Text, battle: Bool) : Text {
     var svg : Text = "<?xml version=\"1.0\" encoding=\"utf-8\"?><svg style=\"height:" #height # "px;width:" #width # "px;\" version=\"1.1\" id=\"generated\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 " #width # " " #height # "\" xml:space=\"preserve\">";
     // background
     // class badge
@@ -32,8 +32,11 @@ module {
     // cape
     // weapon
     // og badge
-    svg #= "<g id=\"backgrounds\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Backgrounds.elements[Nat8.toNat(seed[0])] # "\" /></g>";
-    svg #= "<g id=\"class_badge\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Classes.elements[Nat8.toNat(seed[1])] # "\" /></g>";
+    if (battle == false) {
+      svg #= "<g id=\"backgrounds\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Backgrounds.elements[Nat8.toNat(seed[0])] # "\" /></g>";
+      svg #= "<g id=\"class_badge\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Classes.elements[Nat8.toNat(seed[1])] # "\" /></g>";
+      svg #= "<g id=\"og_badge\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #OgBadge.elements[0] # "\" /></g>";
+    };
     svg #= "<g id=\"outfit\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Outfits.elements[Nat8.toNat(seed[2])] # "\" /></g>";
     svg #= "<g id=\"skin\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Skins.elements[Nat8.toNat(seed[3])] # "\" /></g>";
     if (seed[4] == 1) {
@@ -46,7 +49,6 @@ module {
     svg #= "<g id=\"cape\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Capes.elements[Nat8.toNat(seed[9])] # "\" /></g>";
     svg #= "<g id=\"weapon\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Weapons.elements[Nat8.toNat(seed[10])] # "\" /></g>";
     if (seed[11] == 1) {
-      svg #= "<g id=\"og_badge\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #OgBadge.elements[0] # "\" /></g>";
     };
     svg #= "</svg>";
     return svg;
