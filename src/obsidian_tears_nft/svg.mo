@@ -35,7 +35,9 @@ module {
     if (battle == false) {
       svg #= "<g id=\"backgrounds\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Backgrounds.elements[Nat8.toNat(seed[0])] # "\" /></g>";
       svg #= "<g id=\"class_badge\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Classes.elements[Nat8.toNat(seed[1])] # "\" /></g>";
-      svg #= "<g id=\"og_badge\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #OgBadge.elements[0] # "\" /></g>";
+      if (seed[11] == 1) {
+        svg #= "<g id=\"og_badge\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #OgBadge.elements[0] # "\" /></g>";
+      };
     };
     svg #= "<g id=\"outfit\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Outfits.elements[Nat8.toNat(seed[2])] # "\" /></g>";
     svg #= "<g id=\"skin\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Skins.elements[Nat8.toNat(seed[3])] # "\" /></g>";
@@ -48,8 +50,6 @@ module {
     svg #= "<g id=\"magic_ring\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #MagicRings.elements[Nat8.toNat(seed[8])] # "\" /></g>";
     svg #= "<g id=\"cape\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Capes.elements[Nat8.toNat(seed[9])] # "\" /></g>";
     svg #= "<g id=\"weapon\"><image style=\"height:" #height # "px;width:" #width # "px;\" href=\"" #Weapons.elements[Nat8.toNat(seed[10])] # "\" /></g>";
-    if (seed[11] == 1) {
-    };
     svg #= "</svg>";
     return svg;
   };
