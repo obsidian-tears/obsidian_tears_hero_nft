@@ -19,6 +19,7 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Debug "mo:base/Debug";
+import Timer "mo:base/Timer";
 import Canistergeek "mo:canistergeek/canistergeek";
 
 import Cap "mo:cap/Cap";
@@ -59,7 +60,7 @@ actor class () = this {
   let CapService = Cap.Cap(?"lj532-6iaaa-aaaah-qcc7a-cai", capRootBucketId);
   stable var _capEventsState : [T.CapIndefiniteEvent] = [];
   var _capEvents : List.List<T.CapIndefiniteEvent> = List.fromArray(_capEventsState);
-  stable var _runHeartbeat : Bool = true;
+  stable var _timerFailedAt : Time.Time = 0;
 
   // OBSIDIAN TEARS
   let _blackhole = "the_blackhole";
@@ -474,18 +475,26 @@ actor class () = this {
     _failedSales;
   };
   // EXTv2 SALE
-  system func heartbeat() : async () {
-    if (_runHeartbeat == true) {
-      try {
-        await cronSalesSettlements();
-        await cronDisbursements();
-        await cronSettlements();
-        await cronCapEvents();
-      } catch (e) {
-        _runHeartbeat := false;
-      };
+  system func timer(setGlobalTimer : Nat64 -> ()) : async () {
+    let secondsMore : Nat64 = if (Env.network == "ic") 3_600_000_000_000 else 2_592_000_000_000_000; // nanoseconds: 1 hour || 30 days
+    let next = Nat64.fromIntWrap(Time.now()) + secondsMore;
+    setGlobalTimer(next);
+
+    // clean any queue that wasn't processed in near time
+    await runCron();
+  };
+
+  func runCron() : async () {
+    try {
+      await cronSalesSettlements();
+      await cronDisbursements();
+      await cronSettlements();
+      await cronCapEvents();
+    } catch (e) {
+      _timerFailedAt := Time.now();
     };
   };
+
   public shared func cronDisbursements() : async () {
     var _cont : Bool = true;
     while (_cont) {
@@ -543,9 +552,10 @@ actor class () = this {
       unlockedSettlements().size(),
     ];
   };
-  public query func isHeartbeatRunning() : async Bool {
-    _runHeartbeat;
+  public query func lastTimerFailedAt() : async Time.Time {
+    _timerFailedAt;
   };
+
   // Listings
   // EXTv2 SALE
   public query func toAddress(p : Text, sa : Nat) : async AccountIdentifier {
@@ -850,22 +860,6 @@ actor class () = this {
       } catch (e) {};
     };
     historicExportHasRun;
-  };
-  public shared (msg) func adminKillHeartbeat() : async () {
-    assert (msg.caller == _minter);
-    _runHeartbeat := false;
-  };
-  public shared (msg) func adminStartHeartbeat() : async () {
-    assert (msg.caller == _minter);
-    _runHeartbeat := true;
-  };
-  public shared func adminKillHeartbeatExtra(p : Text) : async () {
-    assert (p == "thisisthepassword");
-    _runHeartbeat := false;
-  };
-  public shared func adminStartHeartbeatExtra(p : Text) : async () {
-    assert (p == "thisisthepassword");
-    _runHeartbeat := true;
   };
 
   public shared (msg) func setMinter(minter : Principal) : async () {
@@ -1333,6 +1327,9 @@ actor class () = this {
   };
   func _transferTokenToUser(tindex : TokenIndex, receiver : AccountIdentifier) : async () {
     _transferTokenToUserSynchronous(tindex, receiver);
+
+    // run cron outside of this call
+    ignore Timer.setTimer<system>(#seconds 0, runCron);
   };
   func _transferTokenToUserSynchronous(tindex : TokenIndex, receiver : AccountIdentifier) : () {
     let owner : ?AccountIdentifier = _getBearer(tindex);
