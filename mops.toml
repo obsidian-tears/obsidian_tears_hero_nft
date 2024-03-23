@@ -2,5 +2,5 @@
 base = "0.11.1"
 array = "https://github.com/aviate-labs/array.mo#v0.1.1@7168c13083715594a076ca01b816f38ed30fa4f8"
 encoding = "https://github.com/aviate-labs/encoding.mo#v0.3.1@ae34ba06abe64c7cc3437fa983fd01907636263f"
-cap = "https://github.com/stephenandrews/cap-motoko-library#v1.0.4-alt@f3332361111e20788c9ecabba714332b31fbd5fb"
-canistergeek = "https://github.com/usergeek/canistergeek-ic-motoko#master@afa4fb40886d9be54e5f6af11318db883aa324a2"
+cap = "https://github.com/tiagoicp/cap-motoko-library#master@c5b0d0a6969c8a8a983ea76a045e6e8e6906ca2d"
+canistergeek = "https://github.com/usergeek/canistergeek-ic-motoko#master@32d1f3a48b1bc12d727b896a69b08bb5f3e5860d"
