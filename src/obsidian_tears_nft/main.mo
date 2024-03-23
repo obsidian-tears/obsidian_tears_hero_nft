@@ -64,8 +64,6 @@ actor class () = this {
   // OBSIDIAN TEARS
   let _blackhole = "the_blackhole";
 
-  let EXTENSIONS : [ER.Extension] = ["@ext/common", "@ext/nonfungible"];
-
   // State work
   stable var _registryState : [(TokenIndex, AccountIdentifier)] = [];
   stable var _tokenMetadataState : [(TokenIndex, Metadata)] = [];
@@ -139,23 +137,8 @@ actor class () = this {
     canistergeekLogger.logMessage("postupgrade");
   };
 
-  //Sale
-  type Sale = {
-    tokens : [TokenIndex];
-    price : Nat64;
-    subaccount : SubAccount;
-    buyer : AccountIdentifier;
-    expires : Time.Time;
-  };
-  type SaleTransaction = {
-    tokens : [TokenIndex];
-    seller : Principal;
-    price : Nat64;
-    buyer : AccountIdentifier;
-    time : Time.Time;
-  };
-  stable var _saleTransactions : [SaleTransaction] = [];
-  stable var _salesSettlementsState : [(AccountIdentifier, Sale)] = [];
+  stable var _saleTransactions : [T.SaleTransaction] = [];
+  stable var _salesSettlementsState : [(AccountIdentifier, T.Sale)] = [];
   stable var _salesPrincipalsState : [(AccountIdentifier, Text)] = [];
   stable var _failedSales : [(AccountIdentifier, SubAccount)] = [];
   stable var _tokensForSale : [TokenIndex] = [];
@@ -167,7 +150,7 @@ actor class () = this {
 
   // Hash tables
   var _salesPrincipals : HashMap.HashMap<AccountIdentifier, Text> = HashMap.fromIter(_salesPrincipalsState.vals(), 0, AID.equal, AID.hash);
-  var _salesSettlements : HashMap.HashMap<AccountIdentifier, Sale> = HashMap.fromIter(_salesSettlementsState.vals(), 0, AID.equal, AID.hash);
+  var _salesSettlements : HashMap.HashMap<AccountIdentifier, T.Sale> = HashMap.fromIter(_salesSettlementsState.vals(), 0, AID.equal, AID.hash);
 
   //Setup - Set all variables here
   //==========================================
@@ -339,25 +322,14 @@ actor class () = this {
   func addToWhitelist(address : AccountIdentifier) : () {
     _whitelist := _append(_whitelist, address);
   };
-  public query func saleTransactions() : async [SaleTransaction] {
+  public query func saleTransactions() : async [T.SaleTransaction] {
     _saleTransactions;
-  };
-  type SaleSettings = {
-    price : Nat64;
-    salePrice : Nat64;
-    sold : Nat;
-    remaining : Nat;
-    startTime : Time.Time;
-    whitelistTime : Time.Time;
-    whitelist : Bool;
-    totalToSell : Nat;
-    bulkPricing : [(Nat64, Nat64)];
   };
 
   func availableTokens() : Nat {
     _tokensForSale.size();
   };
-  public query func salesSettings(address : AccountIdentifier) : async SaleSettings {
+  public query func salesSettings(address : AccountIdentifier) : async T.SaleSettings {
     return {
       price = getAddressPrice(address);
       salePrice = salePrice;
@@ -368,7 +340,7 @@ actor class () = this {
       whitelist = isWhitelisted(address);
       totalToSell = _totalToSell;
       bulkPricing = getAddressBulkPrice(address);
-    } : SaleSettings;
+    } : T.SaleSettings;
   };
   func tempNextTokens(qty : Nat64) : [TokenIndex] {
     //Custom: not pre-mint
@@ -495,7 +467,7 @@ actor class () = this {
     };
   };
 
-  public query func salesSettlements() : async [(AccountIdentifier, Sale)] {
+  public query func salesSettlements() : async [(AccountIdentifier, T.Sale)] {
     Iter.toArray(_salesSettlements.entries());
   };
   public query func failedSales() : async [(AccountIdentifier, SubAccount)] {
@@ -968,7 +940,7 @@ actor class () = this {
     _minter;
   };
   public query func extensions() : async [ER.Extension] {
-    EXTENSIONS;
+    ["@ext/common", "@ext/nonfungible"];
   };
   public query func balance(request : ER.BalanceRequest) : async ER.BalanceResponse {
     if (ExtCore.TokenIdentifier.isPrincipal(request.token, Principal.fromActor(this)) == false) {
