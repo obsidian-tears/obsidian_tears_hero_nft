@@ -94,4 +94,30 @@ module {
         caller : Principal;
     };
 
+    // Sale
+    public type Sale = {
+        tokens : [ER.TokenIndex];
+        price : Nat64;
+        subaccount : ER.SubAccount;
+        buyer : ER.AccountIdentifier;
+        expires : Time.Time;
+    };
+    public type SaleTransaction = {
+        tokens : [ER.TokenIndex];
+        seller : Principal;
+        price : Nat64;
+        buyer : ER.AccountIdentifier;
+        time : Time.Time;
+    };
+    public type SaleSettings = {
+        price : Nat64;
+        salePrice : Nat64;
+        sold : Nat;
+        remaining : Nat;
+        startTime : Time.Time;
+        whitelistTime : Time.Time;
+        whitelist : Bool;
+        totalToSell : Nat;
+        bulkPricing : [(Nat64, Nat64)];
+    };
 };
