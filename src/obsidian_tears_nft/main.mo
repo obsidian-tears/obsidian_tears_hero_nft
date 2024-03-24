@@ -481,10 +481,23 @@ actor class () = this {
     setGlobalTimer(next);
 
     // clean any queue that wasn't processed in near time
-    await runCron();
+    await runCronBatch();
   };
 
-  func runCron() : async () {
+  var tries : Nat = 0;
+  func runCronBatch() : async () {
+    await runCron();
+
+    let pendingCrons = await pendingCronJobs();
+    let positiveElements = Array.filter<Nat>(pendingCrons, func x = x > 0);
+
+    if (positiveElements.size() > 0 and tries < 10) {
+      tries := tries + 1;
+      ignore Timer.setTimer<system>(#seconds 0, runCronBatch);
+    } else if (tries > 0) tries := 0;
+  };
+
+  public func runCron() : async () {
     try {
       await cronSalesSettlements();
       await cronDisbursements();
@@ -495,7 +508,7 @@ actor class () = this {
     };
   };
 
-  public shared func cronDisbursements() : async () {
+  func cronDisbursements() : async () {
     var _cont : Bool = true;
     while (_cont) {
       _cont := false;
@@ -522,14 +535,14 @@ actor class () = this {
       };
     };
   };
-  public shared func cronSalesSettlements() : async () {
+  func cronSalesSettlements() : async () {
     for (ss in _salesSettlements.entries()) {
       if (ss.1.expires < Time.now()) {
         ignore (await retreive(ss.0));
       };
     };
   };
-  public shared func cronSettlements() : async () {
+  func cronSettlements() : async () {
     for (settlement in unlockedSettlements().vals()) {
       ignore (settle(ExtCore.TokenIdentifier.fromPrincipal(Principal.fromActor(this), settlement.0)));
     };
@@ -547,9 +560,10 @@ actor class () = this {
   };
   public query func pendingCronJobs() : async [Nat] {
     [
+      _salesSettlements.size(),
       List.size(_disbursements),
-      List.size(_capEvents),
       unlockedSettlements().size(),
+      List.size(_capEvents),
     ];
   };
   public query func lastTimerFailedAt() : async Time.Time {
@@ -806,7 +820,7 @@ actor class () = this {
   func _capAdd(event : T.CapIndefiniteEvent) : () {
     _capEvents := List.push(event, _capEvents);
   };
-  public shared func cronCapEvents() : async () {
+  func cronCapEvents() : async () {
     var _cont : Bool = true;
     while (_cont) {
       _cont := false;
@@ -1329,7 +1343,7 @@ actor class () = this {
     _transferTokenToUserSynchronous(tindex, receiver);
 
     // run cron outside of this call
-    ignore Timer.setTimer<system>(#seconds 0, runCron);
+    ignore Timer.setTimer<system>(#seconds 0, runCronBatch);
   };
   func _transferTokenToUserSynchronous(tindex : TokenIndex, receiver : AccountIdentifier) : () {
     let owner : ?AccountIdentifier = _getBearer(tindex);
