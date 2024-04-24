@@ -1,6 +1,7 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Char "mo:base/Char";
+import Debug "mo:base/Debug";
 import Cycles "mo:base/ExperimentalCycles";
 import Float "mo:base/Float";
 import HashMap "mo:base/HashMap";
@@ -18,19 +19,17 @@ import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Debug "mo:base/Debug";
 import Timer "mo:base/Timer";
 import Canistergeek "mo:canistergeek/canistergeek";
-
 import Cap "mo:cap/Cap";
 import Encoding "mo:encoding/Binary";
 
-import AID "lib/util/AccountIdentifier";
+import Env "env";
 import EC "lib/ext/Common";
 import ER "lib/ext/Core";
 import ExtCore "lib/ext/Core";
+import AID "lib/util/AccountIdentifier";
 import SVG "svg";
-import Env "env";
 import T "types";
 
 actor class () = this {
@@ -89,7 +88,6 @@ actor class () = this {
   stable var _usedPaymentAddressess : [(AccountIdentifier, Principal, SubAccount)] = [];
   stable var _transactions : [T.Transaction] = [];
   stable var _supply : ER.Balance = 0;
-  var _minter : Principal = Principal.fromText(Env.getAdminPrincipal());
   stable var _nextTokenId : TokenIndex = 0;
 
   // State functions
@@ -208,7 +206,7 @@ actor class () = this {
   };
   //Init code. Mint before calling.
   public shared (msg) func initiateSale() : () {
-    assert (msg.caller == _minter);
+    assert Env.isAdmin(msg.caller);
     assert (_hasBeenInitiated == false);
     _whitelist := [];
     if (initialWhitelist.size() > 0) {
@@ -876,11 +874,6 @@ actor class () = this {
     historicExportHasRun;
   };
 
-  public shared (msg) func setMinter(minter : Principal) : async () {
-    assert (msg.caller == _minter);
-    _minter := minter;
-  };
-
   //EXT
   public shared (msg) func transfer(request : ER.TransferRequest) : async ER.TransferResponse {
     if (request.amount != 1) {
@@ -945,7 +938,7 @@ actor class () = this {
     };
   };
   public query func getMinter() : async Principal {
-    _minter;
+    return Principal.fromText(Env.getAdminPrincipals()[0]);
   };
   public query func extensions() : async [ER.Extension] {
     ["@ext/common", "@ext/nonfungible"];
@@ -1230,7 +1223,7 @@ actor class () = this {
       status_code = 200;
       headers = [("content-type", "text/plain")];
       body = Text.encodeUtf8(
-        nftCollectionName # "\n" # "---\n" # "Cycle Balance:                            ~" # debug_show (Cycles.balance() / 1000000000000) # "T\n" # "Minted NFTs:                              " # debug_show (_nextTokenId) # "\n" # "---\n" # "Whitelist:                                " # debug_show (_whitelist.size() : Nat) # "\n" # "Total to sell:                            " # debug_show (_totalToSell) # "\n" # "Remaining:                                " # debug_show (availableTokens()) # "\n" # "Sold:                                     " # debug_show (_sold) # "\n" # "Sold (ICP):                               " # _displayICP(Nat64.toNat(_soldIcp)) # "\n" # "---\n" # "Marketplace Listings:                     " # debug_show (_tokenListing.size()) # "\n" # "Sold via Marketplace:                     " # debug_show (_transactions.size()) # "\n" # "Sold via Marketplace in ICP:              " # _displayICP(soldValue) # "\n" # "Average Price ICP Via Marketplace:        " # _displayICP(avg) # "\n" # "---\n" # "Admin:                                    " # debug_show (_minter) # "\n"
+        nftCollectionName # "\n" # "---\n" # "Cycle Balance:                            ~" # debug_show (Cycles.balance() / 1000000000000) # "T\n" # "Minted NFTs:                              " # debug_show (_nextTokenId) # "\n" # "---\n" # "Whitelist:                                " # debug_show (_whitelist.size() : Nat) # "\n" # "Total to sell:                            " # debug_show (_totalToSell) # "\n" # "Remaining:                                " # debug_show (availableTokens()) # "\n" # "Sold:                                     " # debug_show (_sold) # "\n" # "Sold (ICP):                               " # _displayICP(Nat64.toNat(_soldIcp)) # "\n" # "---\n" # "Marketplace Listings:                     " # debug_show (_tokenListing.size()) # "\n" # "Sold via Marketplace:                     " # debug_show (_transactions.size()) # "\n" # "Sold via Marketplace in ICP:              " # _displayICP(soldValue) # "\n" # "Average Price ICP Via Marketplace:        " # _displayICP(avg) # "\n" # "---\n" # "Admins:                                    " # debug_show (Env.getAdminPrincipals()) # "\n"
       );
       streaming_strategy = null;
     };
@@ -1469,7 +1462,7 @@ actor class () = this {
 
   // use this function to mint nfts
   public shared (msg) func _mintNftsFromArray(tomint : [[Nat8]]) {
-    assert (msg.caller == _minter);
+    assert Env.isAdmin(msg.caller);
     for (a in tomint.vals()) {
       _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(a) }));
       _transferTokenToUserSynchronous(_nextTokenId, "0000");
@@ -1479,9 +1472,9 @@ actor class () = this {
   };
 
   // use this function to mint development nfts
-  public shared ({ caller }) func _mintAndTransferDevHero(accountIdToTransfer : Text) : async Result.Result<(), ER.CommonError> {
+  public shared (msg) func _mintAndTransferDevHero(accountIdToTransfer : Text) : async Result.Result<(), ER.CommonError> {
+    assert Env.isAdmin(msg.caller);
     if (Env.network == "ic") return #err(#Unauthorized); // only local and staging is allowed
-    if (caller != _minter) return #err(#Unauthorized);
 
     // create initial hero nft
     let metadataToMint : [Nat8] = [2, 2, 5, 3, 0, 0, 1, 0, 0, 2, 13, 0];
@@ -1509,26 +1502,26 @@ actor class () = this {
 
   // update metadata for tokens
   public shared (msg) func updateMetadata(index : Nat32, data : [Nat8]) : () {
-    assert (msg.caller == _minter);
+    assert Env.isAdmin(msg.caller);
     _tokenMetadata.put(index, #nonfungible({ metadata = ?Blob.fromArray(data) }));
   };
 
   // add wallets to the whitelist
   public shared (msg) func addWhitelistWallets(walletAddresses : [AccountIdentifier]) : () {
-    assert (msg.caller == _minter);
+    assert Env.isAdmin(msg.caller);
     _whitelist := _appendAll(_whitelist, walletAddresses);
   };
 
   // create function to reset launch
   public shared (msg) func prepLaunch() : () {
-    assert (msg.caller == _minter);
+    assert Env.isAdmin(msg.caller);
     _whitelist := [];
     _hasBeenInitiated := false;
   };
 
   // create function to burn zero address nfts
   public shared (msg) func burnRemainingNfts() : async [TokenIndex] {
-    assert (msg.caller == _minter);
+    assert Env.isAdmin(msg.caller);
     let tokensToBurn : [TokenIndex] = switch (_owners.get("0000")) {
       case (?t) t;
       case (_) [];
