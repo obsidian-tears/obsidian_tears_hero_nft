@@ -12,6 +12,7 @@ module {
 
         // else "local"
         return [
+            "6ulqo-ikasf-xzltp-ylrhu-qt4gt-nv4rz-gd46e-nagoe-3bo7b-kbm3h-bqe",
             "4e6g2-eoooo-h2lec-3h725-hvmmc-fvgsd-qakd3-qsj44-6dlaw-p5ngz-mae",
             "heq22-7v76v-gwzlq-hl5da-czgby-ghdql-sas4k-ii2tr-voaep-amcsi-tqe",
         ]; // tiago and gastao's dev principals

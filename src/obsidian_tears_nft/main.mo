@@ -1,8 +1,8 @@
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Char "mo:base/Char";
-import Debug "mo:base/Debug";
 import Cycles "mo:base/ExperimentalCycles";
+import Debug "mo:base/Debug";
 import Float "mo:base/Float";
 import HashMap "mo:base/HashMap";
 import Int "mo:base/Int";
@@ -20,15 +20,16 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Timer "mo:base/Timer";
+
 import Canistergeek "mo:canistergeek/canistergeek";
 import Cap "mo:cap/Cap";
 import Encoding "mo:encoding/Binary";
 
-import Env "env";
+import AID "lib/util/AccountIdentifier";
 import EC "lib/ext/Common";
 import ER "lib/ext/Core";
+import Env "env";
 import ExtCore "lib/ext/Core";
-import AID "lib/util/AccountIdentifier";
 import SVG "svg";
 import T "types";
 
@@ -163,27 +164,10 @@ actor class () = this {
     (entrepotRoyaltyAddress, 1000), //Entrepot Fee 1%
   ];
 
-  var airdrop : [AccountIdentifier] = [
-    "d8c17d3507ac742150592a6d249f4bc052bae15e9ba6d4d986c8fb1e8aa7b582",
-    "a0eaa3df1b847329e1128053feba6423416824aeb266e66192270e1353644f4a",
-    "43177eadc1985a577ae5fd7a93cee273364a83194df18a51961dbe262c1e159e",
-    "440a12ac1097b51551c90a752af9fc00b39c1dc1d753f0a3c1974ee0789eb5c0",
-    "97abd404adf0e3a731fe20da2c66f24cd45cf5b9d673207b1cc9ee774e8d7137",
-    "fdab27844b32357777a88c87e6bbc0ef8bca9e5ba4b400decb9c889f267de28d",
-    "85a3319f6c185efb8fd30d4b0178730fc1ea11713268bc262ac85b717f9b909d",
-    "4e5df75d0038846b26971f4eeb0c1ea5a549f52ed3b8e56c4ca29be29be33a3a",
-    "517623dd0ce643d7f3e253d15ff8f618d91843bd1fab89c7fda8def2e9a97684",
-    "eedf2f47155a9803f539d40579b863c95b4b51c755d6bac54269fad27ec4801c",
-    "3fe39de7bee74f71a218ce30463bb5c3ce469f6e0ba006d278adda0183037fa6",
-    "de712aab2b85e1bb07cf92ff656204a44e6d96f85edf6f9953de05242ad1f667",
-    "0d05c571c49aa4e9a43af14dded30170f5cbe1c8a82d77191e4dff6ede60cab0",
-    "89211bf7a4a2a10a44a58c4252f72267d8ca8a09a3da043510e69d428f5b8183",
-    "a50f2c70a60222c3e1f666cfb033f05f66805ebda4b15a2935cac64e13597910",
-    "12bc158b6aad670322f4bfc177b6fc61bbb51d02816fcc26fb187ed9301df7ce",
-  ]; //Airdrops
-  var reservedAmount : Nat64 = 50; //Reserved
-  var saleCommission : Nat64 = 6000; //Sale price
-  var salePrice : Nat64 = 500000000; //Sale price
+  var airdrop : [AccountIdentifier] = []; //Airdrops
+  var reservedAmount : Nat64 = 20; //Reserved
+  var saleCommission : Nat64 = 5000; //Sale price
+  var salePrice : Nat64 = 300000000; //Sale price
   var whitelistPrice : Nat64 = salePrice; //Discount price
   var publicSaleStart : Time.Time = 1656655140000000000; //Jun 23, 2022 3pm GMT Start of first purchase (WL or other)
   var whitelistTime : Time.Time = 1656655140000000000; //Jun 24, 2022 3pm GMT Period for WL only discount. Set to publicSaleStart for no exclusive period
@@ -250,7 +234,10 @@ actor class () = this {
       },
     );
     for (o in ogHodlers.vals()) {
-      _transferTokenToUserSynchronous(nextTokens(1)[0], o);
+      // give a ranger
+      _transferTokenToUserSynchronous(nextTokensByMetadata(1, 1, 0)[0], o);
+      // give a mage
+      _transferTokenToUserSynchronous(nextTokensByMetadata(1, 1, 1)[0], o);
     };
     _totalToSell := _tokensForSale.size();
     _hasBeenInitiated := true;
@@ -285,6 +272,42 @@ actor class () = this {
 
   func nextTokens(qty : Nat64) : [TokenIndex] {
     if (_tokensForSale.size() >= Nat64.toNat(qty)) {
+      var ret : [TokenIndex] = [];
+      while (ret.size() < Nat64.toNat(qty)) {
+        var token : TokenIndex = _tokensForSale[0];
+        _tokensForSale := Array.filter(_tokensForSale, func(x : TokenIndex) : Bool { x != token });
+        ret := _append(ret, token);
+      };
+      ret;
+    } else {
+      [];
+    };
+  };
+  func nextTokensByMetadata(qty : Nat64, metaIndex : Nat, metaValue : Nat8) : [TokenIndex] {
+    // TODO: filter out the pertinent metadata
+    var filteredTokens : [TokenIndex] = Array.filter(_tokensForSale, func (t : TokenIndex) : Bool {
+      switch (_tokenMetadata.get(t)) {
+        case (? #nonfungible r) {
+          switch (r.metadata) {
+            case (?data) {
+              // Assuming metadata format where the first byte indicates the type and '1' is for rangers
+              return Blob.toArray(data)[metaIndex] == metaValue;
+            };
+            case (_) false;
+          };
+        };
+        case (_) false;
+      };
+    });
+    filteredTokens := Array.filter(filteredTokens, func (t : TokenIndex) : Bool {
+      switch (_registry.get(t)) {
+        case (?owner) {
+          return owner == "0000";
+        };
+        case (_) false;
+      };
+    });
+    if (filteredTokens.size() >= Nat64.toNat(qty)) {
       var ret : [TokenIndex] = [];
       while (ret.size() < Nat64.toNat(qty)) {
         var token : TokenIndex = _tokensForSale[0];
