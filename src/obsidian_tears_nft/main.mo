@@ -167,7 +167,7 @@ actor class () = this {
   var airdrop : [AccountIdentifier] = []; //Airdrops
   var reservedAmount : Nat64 = 20; //Reserved
   var saleCommission : Nat64 = 5000; //Sale price
-  var salePrice : Nat64 = 300000000; //Sale price
+  var salePrice : Nat64 = 350000000; //Sale price
   var whitelistPrice : Nat64 = salePrice; //Discount price
   var publicSaleStart : Time.Time = 1656655140000000000; //Jun 23, 2022 3pm GMT Start of first purchase (WL or other)
   var whitelistTime : Time.Time = 1656655140000000000; //Jun 24, 2022 3pm GMT Period for WL only discount. Set to publicSaleStart for no exclusive period
@@ -285,28 +285,34 @@ actor class () = this {
   };
   func nextTokensByMetadata(qty : Nat64, metaIndex : Nat, metaValue : Nat8) : [TokenIndex] {
     // TODO: filter out the pertinent metadata
-    var filteredTokens : [TokenIndex] = Array.filter(_tokensForSale, func (t : TokenIndex) : Bool {
-      switch (_tokenMetadata.get(t)) {
-        case (? #nonfungible r) {
-          switch (r.metadata) {
-            case (?data) {
-              // Assuming metadata format where the first byte indicates the type and '1' is for rangers
-              return Blob.toArray(data)[metaIndex] == metaValue;
+    var filteredTokens : [TokenIndex] = Array.filter(
+      _tokensForSale,
+      func(t : TokenIndex) : Bool {
+        switch (_tokenMetadata.get(t)) {
+          case (? #nonfungible r) {
+            switch (r.metadata) {
+              case (?data) {
+                // Assuming metadata format where the first byte indicates the type and '1' is for rangers
+                return Blob.toArray(data)[metaIndex] == metaValue;
+              };
+              case (_) false;
             };
-            case (_) false;
           };
+          case (_) false;
         };
-        case (_) false;
-      };
-    });
-    filteredTokens := Array.filter(filteredTokens, func (t : TokenIndex) : Bool {
-      switch (_registry.get(t)) {
-        case (?owner) {
-          return owner == "0000";
+      },
+    );
+    filteredTokens := Array.filter(
+      filteredTokens,
+      func(t : TokenIndex) : Bool {
+        switch (_registry.get(t)) {
+          case (?owner) {
+            return owner == "0000";
+          };
+          case (_) false;
         };
-        case (_) false;
-      };
-    });
+      },
+    );
     if (filteredTokens.size() >= Nat64.toNat(qty)) {
       var ret : [TokenIndex] = [];
       while (ret.size() < Nat64.toNat(qty)) {
