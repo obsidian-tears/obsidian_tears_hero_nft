@@ -1505,8 +1505,11 @@ actor class () = this {
     assert Env.isAdmin(msg.caller);
     if (Env.network == "ic") return #err(#Unauthorized); // only local and staging is allowed
 
+    // rotate class
+    let heroClass : Nat8 = Nat8.fromNat(_supply % 3);
+
     // create initial hero nft
-    let metadataToMint : [Nat8] = [2, 2, 5, 3, 0, 0, 1, 0, 0, 2, 13, 0];
+    let metadataToMint : [Nat8] = [2, heroClass, 5, 3, 0, 0, 1, 0, 0, 2, 13, 0];
 
     // mint and transfer nft
     _tokenMetadata.put(_nextTokenId, #nonfungible({ metadata = ?Blob.fromArray(metadataToMint) }));
